@@ -1,14 +1,17 @@
 import * as PIXI from "pixi.js";
 import { useRef, useEffect } from "react";
 import { degreeToRadian } from "../../utils";
+import { selectionType } from "../../appsettings";
 
 const WaferAreaSelector = (props) => {
   const {
+    doReset,
     radiusDivision,
     angleDivision,
     circumference,
     doInvert,
     waferDiameter,
+    onSelectionChanged,
   } = props;
 
   const canvasSize = 300;
@@ -16,11 +19,17 @@ const WaferAreaSelector = (props) => {
     selected: 0xff7373,
     unselected: 0xffffff,
     border: 0x000000,
+    green: 0x00ff00,
   };
 
   const stage = useRef();
   const rootRef = useRef();
   const renderer = useRef();
+  const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    isInitialLoad.current = true;
+  }, [doReset]);
 
   useEffect(() => {
     renderer.current = PIXI.autoDetectRenderer(canvasSize, canvasSize, {
@@ -41,7 +50,10 @@ const WaferAreaSelector = (props) => {
   }, [radiusDivision, angleDivision, circumference]);
 
   useEffect(() => {
-    invertSelection(doInvert);
+    if (!isInitialLoad.current) {
+      invertSelection(doInvert);
+    }
+    isInitialLoad.current = false;
   }, [doInvert]);
 
   const addGraphicsClickHandler = (graphics) => {
@@ -53,21 +65,44 @@ const WaferAreaSelector = (props) => {
       }
       graphics.isSelected = !graphics.isSelected;
       renderer.current.render(stage.current);
+      updateAreaSelection();
     });
   };
 
   const invertSelection = (invert) => {
-    if (stage.current.children.length > 1) {
-      for (let graphics of stage.current.children) {
-        if (!graphics.isSelected) {
-          graphics.tint = colors.selected;
-        } else {
-          graphics.tint = colors.unselected;
-        }
-        graphics.isSelected = !graphics.isSelected;
+    for (let graphics of stage.current.children) {
+      if (!graphics.isSelected) {
+        graphics.tint = colors.selected;
+      } else {
+        graphics.tint = colors.unselected;
       }
-      renderer.current.render(stage.current);
+      graphics.isSelected = !graphics.isSelected;
     }
+    renderer.current.render(stage.current);
+    updateAreaSelection();
+  };
+
+  const updateAreaSelection = () => {
+    let selectedCount = 0;
+    const areasSelected = [];
+    for (let graphics of stage.current.children) {
+      if (graphics.isSelected) {
+        selectedCount++;
+        areasSelected.push(graphics.measurements);
+      }
+    }
+
+    let type = selectionType.none;
+    if (selectedCount === stage.current.children.length) {
+      type = selectionType.full;
+    } else if (selectedCount !== 0) {
+      type = selectionType.partial;
+    }
+
+    onSelectionChanged({
+      selectionType: type,
+      areas: areasSelected,
+    });
   };
 
   const draw = () => {
@@ -75,32 +110,23 @@ const WaferAreaSelector = (props) => {
     const waferRadius = waferDiameter / 2;
 
     stage.current = new PIXI.Container(0x000000, true);
+    stage.current.position.set(center, center);
+    stage.current.pivot.set(center, center);
+    // flip stage vertically as PIXI drawing angle is clockwise
+    stage.current.scale.y = -1;
     stage.current.interactive = true;
 
     // default view - draw single selected circle graphics
     if (radiusDivision === 0 && angleDivision === 0 && circumference === 0) {
-      const circle = new PIXI.Graphics();
-      circle.interactive = true;
-      circle.buttonMode = true;
-      circle.lineStyle(1, colors.border);
-      circle.beginFill(colors.selected);
-      circle.drawCircle(center, center, waferRadius);
-      circle.endFill();
-
-      stage.current.addChild(circle);
+      const graphics = getCircleGraphics(center, waferRadius);
+      graphics.measurements = { radius: waferRadius };
+      stage.current.addChild(graphics);
     } else if (radiusDivision !== 0 && angleDivision === 0) {
       // radius division is selected but angle division is not selected, we need to draw circles
       for (let radius = waferRadius; radius > 0; radius -= radiusDivision) {
-        const circle = new PIXI.Graphics();
-        circle.interactive = true;
-        circle.buttonMode = true;
-        circle.beginFill(colors.unselected);
-        circle.lineStyle(1, colors.border);
-        circle.drawCircle(center, center, radius);
-        circle.endFill();
-        addGraphicsClickHandler(circle);
-
-        stage.current.addChild(circle);
+        const graphics = getCircleGraphics(center, radius);
+        graphics.measurements = { radius: radius - radiusDivision };
+        stage.current.addChild(graphics);
       }
     } else if (radiusDivision === 0 && angleDivision !== 0) {
       // angle is selected but radius is not selected, need to draw arcs!
@@ -108,15 +134,11 @@ const WaferAreaSelector = (props) => {
       for (let angle = 0; angle < 360; angle += angleDivision) {
         const start = degreeToRadian(angle);
         const end = degreeToRadian(angle + angleDivision);
-
-        const graphics = new PIXI.Graphics();
-        graphics.interactive = true;
-        graphics.buttonMode = true;
-        graphics.beginFill(colors.unselected);
-        graphics.lineStyle(1, colors.border, 0.5);
-        graphics.arc(center, center, radius, start, end);
-        graphics.lineTo(center, center);
-        addGraphicsClickHandler(graphics);
+        const graphics = getArcGraphics(center, radius, start, end);
+        graphics.measurements = {
+          angle,
+          radius: radius - radiusDivision,
+        };
 
         stage.current.addChild(graphics);
       }
@@ -126,22 +148,53 @@ const WaferAreaSelector = (props) => {
         for (let angle = 0; angle < 360; angle += angleDivision) {
           const start = degreeToRadian(angle);
           const end = degreeToRadian(angle + angleDivision);
-
-          const graphics = new PIXI.Graphics();
-          graphics.interactive = true;
-          graphics.buttonMode = true;
-          graphics.beginFill(colors.unselected);
-          graphics.lineStyle(1, colors.border, 0.5);
-          graphics.arc(center, center, radius, start, end);
-          graphics.lineTo(center, center);
-          addGraphicsClickHandler(graphics);
+          const graphics = getArcGraphics(center, radius, start, end);
+          graphics.measurements = {
+            angle,
+            radius: radius - radiusDivision,
+          };
 
           stage.current.addChild(graphics);
         }
       }
     }
 
+    onSelectionChanged({
+      selectionType: selectionType.full,
+      areas: [],
+    });
     renderer.current.render(stage.current);
+  };
+
+  const getCircleGraphics = (center, radius) => {
+    const graphics = new PIXI.Graphics();
+    graphics.beginFill(colors.unselected);
+    graphics.lineStyle(1, colors.border);
+    graphics.drawCircle(center, center, radius);
+    graphics.endFill();
+    graphics.interactive = true;
+    graphics.buttonMode = true;
+    graphics.isSelected = true;
+    graphics.tint = colors.selected;
+    addGraphicsClickHandler(graphics);
+
+    return graphics;
+  };
+
+  const getArcGraphics = (center, radius, start, end) => {
+    const graphics = new PIXI.Graphics();
+    graphics.beginFill(colors.unselected);
+    graphics.lineStyle(1, colors.border, 0.5);
+    graphics.arc(center, center, radius, start, end);
+    graphics.lineTo(center, center);
+    graphics.endFill();
+    graphics.interactive = true;
+    graphics.buttonMode = true;
+    graphics.isSelected = true;
+    graphics.tint = colors.selected;
+    addGraphicsClickHandler(graphics);
+
+    return graphics;
   };
 
   return <div ref={rootRef} />;

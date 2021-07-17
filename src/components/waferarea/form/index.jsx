@@ -105,7 +105,7 @@ const WaferAreaForm = (props) => {
             <MenuItem value={0}>0 mm</MenuItem>
             <MenuItem value={5}>5 mm</MenuItem>
             <MenuItem value={10}>10 mm</MenuItem>
-            <MenuItem value={20}>20 mm</MenuItem>
+            <MenuItem value={30}>30 mm</MenuItem>
             <MenuItem value={25}>25 mm</MenuItem>
             <MenuItem value={50}>50 mm</MenuItem>
           </Select>

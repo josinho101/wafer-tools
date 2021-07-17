@@ -34,4 +34,7 @@ export const randomNumber = (min, max, includeZero) => {
   return Math.random() * (max - min) + min;
 };
 
-export const degreeToRadian = (angle) => +((angle * Math.PI) / 180).toFixed(5);
+export const degreeToRadian = (angle) => +(angle * (Math.PI / 180));
+
+export const uuid = () =>
+  Date.now().toString(36) + Math.random().toString(36).substr(2);

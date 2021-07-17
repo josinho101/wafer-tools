@@ -5,28 +5,44 @@ import {
   inside,
   removeEmptyRows,
   randomNumber,
+  degreeToRadian,
 } from "../../utils";
 import { Typography } from "@material-ui/core";
 import { useStyles } from "./style";
+import { selectionType } from "../../appsettings";
 
 const Wafer = (props) => {
-  const canvasSize = 600;
-  const scale = 1.9;
-  const waferRadius = 150;
-  const maxDefectsInDie = 3;
-  const { doReset } = props;
+  const {
+    doReset,
+    radiusDivision,
+    angleDivision,
+    circumference,
+    selectionArea,
+  } = props;
 
+  const stage = useRef();
+  const rootRef = useRef();
+  const renderer = useRef();
+
+  const classes = useStyles();
+
+  const [dieCount, setDieCount] = useState(0);
+  const [defectCount, setDefectCount] = useState({
+    total: 0,
+    visible: 0,
+    hidden: 0,
+  });
+  const [dies, setDies] = useState([]);
+  const [defects, setDefects] = useState([]);
+
+  const canvasSize = 600;
+  const scale = 1.7;
+  const waferRadius = 150;
+  const maxDefectsInDie = 50;
   const diePitch = {
     height: 10,
     width: 10,
   };
-
-  const classes = useStyles();
-  const stage = useRef();
-  const rootRef = useRef();
-  const renderer = useRef();
-  const [dieCount, setDieCount] = useState(0);
-  const [defectCount, setDefectCount] = useState(0);
 
   useEffect(() => {
     renderer.current = PIXI.autoDetectRenderer(canvasSize, canvasSize, {
@@ -43,8 +59,12 @@ const Wafer = (props) => {
   }, []);
 
   useEffect(() => {
-    draw();
+    generateDiesAndDefects();
   }, [doReset]);
+
+  useEffect(() => {
+    draw();
+  }, [selectionArea, dies, defects]);
 
   const draw = () => {
     const center = canvasSize / 2;
@@ -53,14 +73,170 @@ const Wafer = (props) => {
     stage.current.position.set(center, center);
     stage.current.pivot.set(center, center);
 
+    // draw wafer circle
     const circle = new PIXI.Graphics();
     circle.beginFill(0xffffff);
     circle.drawCircle(center, center, waferRadius);
     circle.endFill();
     stage.current.addChild(circle);
 
+    // draw die grid lines
+    const gridLines = new PIXI.Graphics();
+    gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
+    dies.forEach((row) => {
+      row.forEach((die) => {
+        if (die !== undefined) {
+          if (die["dx"] !== undefined && die["dy"] !== undefined) {
+            gridLines.drawRect(
+              die["dx"],
+              die["dy"],
+              diePitch.width,
+              diePitch.height
+            );
+          }
+        }
+      });
+    });
+    gridLines.endFill();
+    stage.current.addChild(gridLines);
+
+    console.log(selectionArea);
+    // draw wafer defects
+    let defectCounter = 0;
+    const defectGraphics = new PIXI.Graphics();
+    switch (selectionArea.selectionType) {
+      case selectionType.full:
+        // render full defects!!
+        defects.forEach((defect) => {
+          defectGraphics.beginFill(defect.color);
+          defectGraphics.drawCircle(defect.x, defect.y, 1);
+          defectGraphics.endFill();
+          defectCounter++;
+        });
+        break;
+      case selectionType.partial:
+        // render defects based on the selection made in area selector
+        selectionArea.areas.forEach((sector) => {
+          const start = degreeToRadian(360 - sector.angle - angleDivision);
+          const end = degreeToRadian(360 - sector.angle);
+          const center = { x: canvasSize / 2, y: canvasSize / 2 };
+          const sectorStart = { x: Math.cos(start), y: Math.sin(start) };
+          const sectorEnd = { x: Math.cos(end), y: Math.sin(end) };
+          const startRadiusSquared = Math.pow(sector.radius, 2);
+          const endRadiusSquared = Math.pow(sector.radius + radiusDivision, 2);
+
+          if (radiusDivision === 0 && angleDivision !== 0) {
+            // no radius division selected! check for sectors with radius as wafer radius
+            const radiusSquared = Math.pow(waferRadius, 2);
+            defects.forEach((defect) => {
+              const isInside = isInsideSector(
+                { x: defect.x, y: defect.y },
+                center,
+                sectorStart,
+                sectorEnd,
+                radiusSquared
+              );
+              if (isInside) {
+                defectGraphics.beginFill(defect.color);
+                defectGraphics.drawCircle(defect.x, defect.y, 1);
+                defectGraphics.endFill();
+                defectCounter++;
+              }
+            });
+          } else if (angleDivision === 0 && radiusDivision !== 0) {
+            // no angle division. check if defects is between radius
+            defects.forEach((defect) => {
+              const isInsideRadius = isBetweenRadius(
+                { x: defect.x, y: defect.y },
+                center,
+                startRadiusSquared,
+                endRadiusSquared
+              );
+              if (isInsideRadius) {
+                defectGraphics.beginFill(defect.color);
+                defectGraphics.drawCircle(defect.x, defect.y, 1);
+                defectGraphics.endFill();
+                defectCounter++;
+              }
+            });
+          } else {
+            defects.forEach((defect) => {
+              const isInsideRadius = isBetweenRadius(
+                { x: defect.x, y: defect.y },
+                center,
+                startRadiusSquared,
+                endRadiusSquared
+              );
+              const isInside = isInsideSector(
+                { x: defect.x, y: defect.y },
+                center,
+                sectorStart,
+                sectorEnd,
+                endRadiusSquared
+              );
+              if (isInside && isInsideRadius) {
+                defectGraphics.beginFill(defect.color);
+                defectGraphics.drawCircle(defect.x, defect.y, 1);
+                defectGraphics.endFill();
+                defectCounter++;
+              }
+            });
+          }
+        });
+        break;
+      case selectionType.none:
+        // wafer area fulliy unselected. no need to render defects.
+        break;
+    }
+
+    setDefectCount({
+      total: defects.length,
+      visible: defectCounter,
+      hidden: defects.length - defectCounter,
+    });
+    stage.current.addChild(defectGraphics);
+    renderer.current.render(stage.current);
+  };
+
+  const isBetweenRadius = (p, center, fromRadiusSquared, toRadiusSquared) => {
+    const x = Math.pow(p.x - center.x, 2);
+    const y = Math.pow(p.y - center.y, 2);
+    const isGreaterThanFromRadius = x + y > fromRadiusSquared;
+    const isLessThanToRadius = x + y < toRadiusSquared;
+
+    return isGreaterThanFromRadius && isLessThanToRadius;
+  };
+
+  const isInsideSector = (
+    point,
+    center,
+    sectorStart,
+    sectorEnd,
+    radiusSquared
+  ) => {
+    const relPoint = {
+      x: point.x - center.x,
+      y: point.y - center.y,
+    };
+
+    return (
+      !areClockwise(sectorStart, relPoint) &&
+      areClockwise(sectorEnd, relPoint) &&
+      isWithinRadius(relPoint, radiusSquared)
+    );
+  };
+
+  const areClockwise = (v1, v2) => {
+    return -v1.x * v2.y + v1.y * v2.x > 0;
+  };
+
+  const isWithinRadius = (v, radiusSquared) => {
+    return v.x * v.x + v.y * v.y <= radiusSquared;
+  };
+
+  const generateDiesAndDefects = () => {
     // draw wafer grid lines
-    const waferCenter = { x: 300, y: 300 };
+    const waferCenter = { x: canvasSize / 2, y: canvasSize / 2 };
     const topLeftX = waferCenter.x - waferRadius;
     const topLeftY = waferCenter.y - waferRadius;
     const rightBottomX = waferCenter.x + waferRadius;
@@ -76,18 +252,15 @@ const Wafer = (props) => {
 
     getDies(dieInfo, waferCenter).then((dieIndexes) => {
       let dieCounter = 0;
-      const defects = [];
-      const dies = removeEmptyRows(dieIndexes);
+      const defectData = [];
+      const dieData = removeEmptyRows(dieIndexes);
 
-      const gridLines = new PIXI.Graphics();
-      gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
-      dies.forEach((row) => {
+      dieData.forEach((row) => {
         row.forEach((die) => {
           if (die !== undefined) {
             const dx = die["dx"];
             const dy = die["dy"];
             if (dx !== undefined && dy !== undefined) {
-              gridLines.drawRect(dx, dy, diePitch.width, diePitch.height);
               dieCounter++;
 
               // generate defects for a die based on maxDefects
@@ -96,56 +269,40 @@ const Wafer = (props) => {
               while (defectCounter < maxDefects) {
                 const defectX = randomNumber(1, diePitch.width);
                 const defectY = randomNumber(1, diePitch.height);
-                defects.push({ x: dx + defectX, y: dy + defectY });
+                defectData.push({
+                  x: dx + defectX,
+                  y: dy + defectY,
+                  color: getRandomColor(),
+                });
                 defectCounter++;
               }
             }
           }
         });
       });
-      gridLines.endFill();
 
-      const defectGraphics = new PIXI.Graphics();
-      defects.forEach((defect) => {
-        const color = getRandomColor();
-        defectGraphics.beginFill(color);
-        defectGraphics.drawCircle(defect.x, defect.y, 2);
-        defectGraphics.endFill();
-      });
-
+      setDies(dieData);
+      setDefects(defectData);
       setDieCount(dieCounter);
-      setDefectCount(defects.length);
-
-      stage.current.addChild(gridLines);
-      stage.current.addChild(defectGraphics);
-      renderer.current.render(stage.current);
     });
   };
 
   const getDies = (dieInfo, center) => {
     const { topLeftX, topLeftY, rightBottomX, rightBottomY, diePitch } =
       dieInfo;
-    const dieHeight = diePitch.height;
-    const dieWidth = diePitch.width;
+    const height = diePitch.height;
+    const width = diePitch.width;
 
     const promise = new Promise((resolve, reject) => {
       let dieIndexes = [];
       let x = 0;
       let y = 0;
       setTimeout(() => {
-        for (let dy = topLeftY; dy < rightBottomY; dy += dieHeight) {
+        for (let dy = topLeftY; dy < rightBottomY; dy += height) {
           dieIndexes[y] = [];
-          for (let dx = topLeftX; dx < rightBottomX; dx += dieWidth) {
+          for (let dx = topLeftX; dx < rightBottomX; dx += width) {
             if (
-              inside(
-                dx,
-                dy,
-                dieWidth,
-                dieHeight,
-                center.x,
-                center.y,
-                waferRadius
-              )
+              inside(dx, dy, width, height, center.x, center.y, waferRadius)
             ) {
               dieIndexes[y][x] = { x, y, dx, dy };
             } else {
@@ -159,19 +316,28 @@ const Wafer = (props) => {
         resolve(dieIndexes);
       }, 0);
     });
+
     return promise;
   };
 
   return (
     <div>
-      <div className={classes.waferLabel}>
+      <div className={classes.waferLabelLeft}>
+        <Typography
+          className={classes.label}
+        >{`Total defect count - ${defectCount.total}`}</Typography>
+        <Typography
+          className={classes.label}
+        >{`Visible defect count - ${defectCount.visible}`}</Typography>
+        <Typography
+          className={classes.label}
+        >{`Hidden defect count - ${defectCount.hidden}`}</Typography>
+      </div>
+      <div className={classes.waferLabelRight}>
         <Typography className={classes.label}>{`Scale - ${scale}`}</Typography>
         <Typography
           className={classes.label}
         >{`Die count - ${dieCount}`}</Typography>
-        <Typography
-          className={classes.label}
-        >{`Defect count - ${defectCount}`}</Typography>
         <Typography
           className={classes.label}
         >{`Die pitch X - ${diePitch.width} mm`}</Typography>
