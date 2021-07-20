@@ -1,92 +1,55 @@
-import clsx from "clsx";
 import {
   AppBar,
-  Toolbar,
   CssBaseline,
-  Typography,
-  Paper,
-  Grid,
   ThemeProvider,
+  Tab,
+  Tabs,
 } from "@material-ui/core";
-import Wafer from "../wafer";
-import { useStyles } from "./style";
 import { theme } from "../../theme";
 import { useState } from "react";
-import WaferAreaSelector from "../waferarea";
-import WaferAreaForm from "../waferarea/form";
-import { selectionType } from "../../appsettings";
+import { appTabs } from "../../appsettings";
+import TabPanel from "../ui/tabpanel";
+import WaferArea from "../waferarea";
+import CoordinateCorrection from "../coordinatecorrection";
 
 const App = () => {
-  const classes = useStyles();
-  const waferDiameter = 300;
-  const [waferAreaOptions, setWaferAreaOptions] = useState({
-    radius: 0,
-    angle: 0,
-    circumference: 0,
-    doInvert: false,
-  });
-  const [doReset, setDoReset] = useState(0);
-  const [selectionArea, setSelectionArea] = useState({
-    selectionType: selectionType.full,
-    areas: [],
-  });
+  const [selectedTab, setSelectedTab] = useState(appTabs.waferArea);
 
-  const onWaferAreaOptionChanged = (options) => {
-    setWaferAreaOptions(options);
-  };
-
-  const onReset = (value) => {
-    setDoReset(value);
-    setSelectionArea({
-      selectionType: selectionType.full,
-      areas: [],
-    });
-  };
-
-  const onSelectionChanged = (areas) => {
-    setSelectionArea(areas);
+  const onTabChanged = (e, selected) => {
+    setSelectedTab(selected);
   };
 
   return (
     <div>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h4">Wafer Area Selector</Typography>
-          </Toolbar>
-        </AppBar>
-        <Grid container className={classes.container}>
-          <Grid item xs={5}>
-            <Paper className={classes.paper}>
-              <WaferAreaForm
-                onReset={onReset}
-                waferDiameter={waferDiameter}
-                onSelectionChange={onWaferAreaOptionChanged}
+        <div>
+          <AppBar position="static">
+            <Tabs
+              value={selectedTab}
+              onChange={onTabChanged}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab value={appTabs.waferDetails} label="Wafer Details" />
+              <Tab value={appTabs.waferArea} label="Wafer Area" />
+              <Tab
+                value={appTabs.coordinateCorrection}
+                label="Coordinate Correction"
               />
-              <WaferAreaSelector
-                doReset={doReset}
-                waferDiameter={waferDiameter}
-                radiusDivision={waferAreaOptions.radius}
-                angleDivision={waferAreaOptions.angle}
-                circumference={waferAreaOptions.circumference}
-                doInvert={waferAreaOptions.doInvert}
-                onSelectionChanged={onSelectionChanged}
-              />
-            </Paper>
-          </Grid>
-          <Grid item xs={7}>
-            <Paper className={clsx(classes.paper, classes.waferPaper)}>
-              <Wafer
-                doReset={doReset}
-                selectionArea={selectionArea}
-                radiusDivision={waferAreaOptions.radius}
-                angleDivision={waferAreaOptions.angle}
-                circumference={waferAreaOptions.circumference}
-              />
-            </Paper>
-          </Grid>
-        </Grid>
+            </Tabs>
+            <TabPanel
+              value={selectedTab}
+              index={appTabs.waferDetails}
+            ></TabPanel>
+            <TabPanel value={selectedTab} index={appTabs.waferArea}>
+              <WaferArea />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={appTabs.coordinateCorrection}>
+              <CoordinateCorrection />
+            </TabPanel>
+          </AppBar>
+        </div>
       </ThemeProvider>
     </div>
   );

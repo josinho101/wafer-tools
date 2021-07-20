@@ -19,6 +19,9 @@ export const theme = createTheme({
           borderRadius: 10,
           background: "white",
         },
+        html: {
+          backgroundColor: "black",
+        },
       },
     },
   },

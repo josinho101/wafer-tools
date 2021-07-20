@@ -1,203 +1,107 @@
-import * as PIXI from "pixi.js";
-import { useRef, useEffect } from "react";
-import { degreeToRadian } from "../../utils";
+import clsx from "clsx";
+import { Paper, Grid } from "@material-ui/core";
+import Wafer from "../wafer";
+import { useStyles } from "./style";
+import { useState, useEffect } from "react";
+import WaferAreaSelector from "./selector";
+import WaferAreaForm from "./form";
 import { selectionType } from "../../appsettings";
+import { generateDiesAndDefects } from "../../utils/waferhelper";
 
-const WaferAreaSelector = (props) => {
-  const {
-    doReset,
-    radiusDivision,
-    angleDivision,
-    circumference,
-    doInvert,
-    waferDiameter,
-    onSelectionChanged,
-  } = props;
-
-  const canvasSize = 300;
-  const colors = {
-    selected: 0xff7373,
-    unselected: 0xffffff,
-    border: 0x000000,
-    green: 0x00ff00,
+const WaferArea = () => {
+  const classes = useStyles();
+  const scale = 1.7;
+  const waferRadius = 150;
+  const waferDiameter = waferRadius * 2;
+  const defectDiameter = 1;
+  const maxDefectsInDie = 50;
+  const canvasSize = waferRadius * 2 * scale;
+  const diePitch = {
+    height: 10,
+    width: 10,
   };
 
-  const stage = useRef();
-  const rootRef = useRef();
-  const renderer = useRef();
-  const isInitialLoad = useRef(true);
+  const [doReset, setDoReset] = useState(0);
+  const [dies, setDies] = useState([]);
+  const [defects, setDefects] = useState([]);
+  const [waferAreaOptions, setWaferAreaOptions] = useState({
+    radius: 0,
+    angle: 0,
+    circumference: 0,
+    doInvert: false,
+  });
+  const [selectionArea, setSelectionArea] = useState({
+    selectionType: selectionType.full,
+    areas: [],
+  });
 
   useEffect(() => {
-    isInitialLoad.current = true;
-  }, [doReset]);
+    const [dies, defects] = generateDiesAndDefects(
+      canvasSize,
+      waferRadius,
+      defectDiameter,
+      maxDefectsInDie,
+      diePitch
+    );
+    setDies(dies);
+    setDefects(defects);
+  }, [doReset, canvasSize]);
 
-  useEffect(() => {
-    renderer.current = PIXI.autoDetectRenderer(canvasSize, canvasSize, {
-      transparent: true,
-      antialias: true,
-    });
-
-    rootRef.current.appendChild(renderer.current.view);
-
-    return () => {
-      renderer.current.destroy(true);
-      renderer.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    draw();
-  }, [radiusDivision, angleDivision, circumference]);
-
-  useEffect(() => {
-    if (!isInitialLoad.current) {
-      invertSelection(doInvert);
-    }
-    isInitialLoad.current = false;
-  }, [doInvert]);
-
-  const addGraphicsClickHandler = (graphics) => {
-    graphics.on("click", () => {
-      if (!graphics.isSelected) {
-        graphics.tint = colors.selected;
-      } else {
-        graphics.tint = colors.unselected;
-      }
-      graphics.isSelected = !graphics.isSelected;
-      renderer.current.render(stage.current);
-      updateAreaSelection();
-    });
+  const onWaferAreaOptionChanged = (options) => {
+    setWaferAreaOptions(options);
   };
 
-  const invertSelection = (invert) => {
-    for (let graphics of stage.current.children) {
-      if (!graphics.isSelected) {
-        graphics.tint = colors.selected;
-      } else {
-        graphics.tint = colors.unselected;
-      }
-      graphics.isSelected = !graphics.isSelected;
-    }
-    renderer.current.render(stage.current);
-    updateAreaSelection();
-  };
-
-  const updateAreaSelection = () => {
-    let selectedCount = 0;
-    const areasSelected = [];
-    for (let graphics of stage.current.children) {
-      if (graphics.isSelected) {
-        selectedCount++;
-        areasSelected.push(graphics.measurements);
-      }
-    }
-
-    let type = selectionType.none;
-    if (selectedCount === stage.current.children.length) {
-      type = selectionType.full;
-    } else if (selectedCount !== 0) {
-      type = selectionType.partial;
-    }
-
-    onSelectionChanged({
-      selectionType: type,
-      areas: areasSelected,
-    });
-  };
-
-  const draw = () => {
-    const center = canvasSize / 2;
-    const waferRadius = waferDiameter / 2;
-
-    stage.current = new PIXI.Container(0x000000, true);
-    stage.current.position.set(center, center);
-    stage.current.pivot.set(center, center);
-    // flip stage vertically as PIXI drawing angle is clockwise
-    stage.current.scale.y = -1;
-    stage.current.interactive = true;
-
-    // default view - draw single selected circle graphics
-    if (radiusDivision === 0 && angleDivision === 0 && circumference === 0) {
-      const graphics = getCircleGraphics(center, waferRadius);
-      graphics.measurements = { radius: waferRadius };
-      stage.current.addChild(graphics);
-    } else if (radiusDivision !== 0 && angleDivision === 0) {
-      // radius division is selected but angle division is not selected, we need to draw circles
-      for (let radius = waferRadius; radius > 0; radius -= radiusDivision) {
-        const graphics = getCircleGraphics(center, radius);
-        graphics.measurements = { radius: radius - radiusDivision };
-        stage.current.addChild(graphics);
-      }
-    } else if (radiusDivision === 0 && angleDivision !== 0) {
-      // angle is selected but radius is not selected, need to draw arcs!
-      const radius = waferDiameter / 2;
-      for (let angle = 0; angle < 360; angle += angleDivision) {
-        const start = degreeToRadian(angle);
-        const end = degreeToRadian(angle + angleDivision);
-        const graphics = getArcGraphics(center, radius, start, end);
-        graphics.measurements = {
-          angle,
-          radius: radius - radiusDivision,
-        };
-
-        stage.current.addChild(graphics);
-      }
-    } else if (radiusDivision !== 0 && angleDivision !== 0) {
-      // both radius and angle divisions selected. draw acrs!
-      for (let radius = waferRadius; radius > 0; radius -= radiusDivision) {
-        for (let angle = 0; angle < 360; angle += angleDivision) {
-          const start = degreeToRadian(angle);
-          const end = degreeToRadian(angle + angleDivision);
-          const graphics = getArcGraphics(center, radius, start, end);
-          graphics.measurements = {
-            angle,
-            radius: radius - radiusDivision,
-          };
-
-          stage.current.addChild(graphics);
-        }
-      }
-    }
-
-    onSelectionChanged({
+  const onReset = (value) => {
+    setDoReset(value);
+    setSelectionArea({
       selectionType: selectionType.full,
       areas: [],
     });
-    renderer.current.render(stage.current);
   };
 
-  const getCircleGraphics = (center, radius) => {
-    const graphics = new PIXI.Graphics();
-    graphics.beginFill(colors.unselected);
-    graphics.lineStyle(1, colors.border);
-    graphics.drawCircle(center, center, radius);
-    graphics.endFill();
-    graphics.interactive = true;
-    graphics.buttonMode = true;
-    graphics.isSelected = true;
-    graphics.tint = colors.selected;
-    addGraphicsClickHandler(graphics);
-
-    return graphics;
+  const onSelectionChanged = (areas) => {
+    setSelectionArea(areas);
   };
 
-  const getArcGraphics = (center, radius, start, end) => {
-    const graphics = new PIXI.Graphics();
-    graphics.beginFill(colors.unselected);
-    graphics.lineStyle(1, colors.border, 0.5);
-    graphics.arc(center, center, radius, start, end);
-    graphics.lineTo(center, center);
-    graphics.endFill();
-    graphics.interactive = true;
-    graphics.buttonMode = true;
-    graphics.isSelected = true;
-    graphics.tint = colors.selected;
-    addGraphicsClickHandler(graphics);
-
-    return graphics;
-  };
-
-  return <div ref={rootRef} />;
+  return (
+    <Grid container className={classes.container}>
+      <Grid item xs={5}>
+        <Paper className={classes.paper}>
+          <WaferAreaForm
+            onReset={onReset}
+            waferDiameter={waferDiameter}
+            onSelectionChange={onWaferAreaOptionChanged}
+          />
+          <WaferAreaSelector
+            doReset={doReset}
+            waferDiameter={waferDiameter}
+            radiusDivision={waferAreaOptions.radius}
+            angleDivision={waferAreaOptions.angle}
+            circumference={waferAreaOptions.circumference}
+            doInvert={waferAreaOptions.doInvert}
+            onSelectionChanged={onSelectionChanged}
+          />
+        </Paper>
+      </Grid>
+      <Grid item xs={7}>
+        <Paper className={clsx(classes.paper, classes.waferPaper)}>
+          <Wafer
+            dies={dies}
+            defects={defects}
+            scale={scale}
+            diePitch={diePitch}
+            canvasSize={canvasSize}
+            waferRadius={waferRadius}
+            defectDiameter={defectDiameter}
+            selectionArea={{
+              ...selectionArea,
+              angleDivision: waferAreaOptions.angle,
+            }}
+          />
+        </Paper>
+      </Grid>
+    </Grid>
+  );
 };
 
-export default WaferAreaSelector;
+export default WaferArea;
