@@ -38,3 +38,5 @@ export const degreeToRadian = (angle) => +(angle * (Math.PI / 180));
 
 export const uuid = () =>
   Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+export const convertNmToMm = (nanoMeter) => nanoMeter / 1000000;

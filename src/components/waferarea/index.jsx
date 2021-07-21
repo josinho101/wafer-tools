@@ -1,12 +1,15 @@
 import clsx from "clsx";
-import { Paper, Grid } from "@material-ui/core";
+import { Paper, Grid, Typography } from "@material-ui/core";
 import Wafer from "../wafer";
 import { useStyles } from "./style";
 import { useState, useEffect } from "react";
 import WaferAreaSelector from "./selector";
 import WaferAreaForm from "./form";
 import { selectionType } from "../../appsettings";
-import { generateDiesAndDefects } from "../../utils/waferhelper";
+import {
+  generateDiesAndDefects,
+  filterDefectsByArea,
+} from "../../utils/waferhelper";
 
 const WaferArea = () => {
   const classes = useStyles();
@@ -23,7 +26,9 @@ const WaferArea = () => {
 
   const [doReset, setDoReset] = useState(0);
   const [dies, setDies] = useState([]);
+  const [dieCount, setDieCount] = useState(0);
   const [defects, setDefects] = useState([]);
+  const [filteredDefects, setFilteredDefects] = useState([]);
   const [waferAreaOptions, setWaferAreaOptions] = useState({
     radius: 0,
     angle: 0,
@@ -36,7 +41,7 @@ const WaferArea = () => {
   });
 
   useEffect(() => {
-    const [dies, defects] = generateDiesAndDefects(
+    const [dies, defects, dieCount] = generateDiesAndDefects(
       canvasSize,
       waferRadius,
       defectDiameter,
@@ -44,8 +49,20 @@ const WaferArea = () => {
       diePitch
     );
     setDies(dies);
+    setDieCount(dieCount);
     setDefects(defects);
   }, [doReset, canvasSize]);
+
+  useEffect(() => {
+    // filter defects by selected areas
+    const filteredItems = filterDefectsByArea(
+      selectionArea,
+      canvasSize,
+      defects,
+      waferAreaOptions.angle
+    );
+    setFilteredDefects(filteredItems);
+  }, [selectionArea, defects, waferAreaOptions]);
 
   const onWaferAreaOptionChanged = (options) => {
     setWaferAreaOptions(options);
@@ -85,19 +102,40 @@ const WaferArea = () => {
       </Grid>
       <Grid item xs={7}>
         <Paper className={clsx(classes.paper, classes.waferPaper)}>
+          <div className={classes.waferLabelLeft}>
+            <Typography
+              className={classes.label}
+            >{`Total defect count - ${defects.length}`}</Typography>
+            <Typography
+              className={classes.label}
+            >{`Visible defect count - ${filteredDefects.length}`}</Typography>
+            <Typography className={classes.label}>{`Hidden defect count - ${
+              defects.length - filteredDefects.length
+            }`}</Typography>
+          </div>
           <Wafer
             dies={dies}
-            defects={defects}
             scale={scale}
             diePitch={diePitch}
             canvasSize={canvasSize}
+            defects={filteredDefects}
             waferRadius={waferRadius}
             defectDiameter={defectDiameter}
-            selectionArea={{
-              ...selectionArea,
-              angleDivision: waferAreaOptions.angle,
-            }}
           />
+          <div className={classes.waferLabelRight}>
+            <Typography
+              className={classes.label}
+            >{`Scale - ${scale}`}</Typography>
+            <Typography
+              className={classes.label}
+            >{`Die count - ${dieCount}`}</Typography>
+            <Typography
+              className={classes.label}
+            >{`Die pitch X - ${diePitch.width} mm`}</Typography>
+            <Typography
+              className={classes.label}
+            >{`Die pitch Y - ${diePitch.height} mm`}</Typography>
+          </div>
         </Paper>
       </Grid>
     </Grid>

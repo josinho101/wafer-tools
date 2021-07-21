@@ -1,4 +1,138 @@
-import { inside, removeEmptyRows, randomNumber, getRandomColor } from "./";
+import {
+  inside,
+  removeEmptyRows,
+  randomNumber,
+  getRandomColor,
+  degreeToRadian,
+} from "./";
+import { selectionType, shapes } from "../appsettings";
+
+export const rotate2D = (x, y, cx, cy, radian) => {
+  const xp = (x - cx) * Math.cos(radian) - (y - cy) * Math.sin(radian) + cx;
+  const yp = (x - cx) * Math.sin(radian) + (y - cy) * Math.cos(radian) + cy;
+
+  return { x: xp, y: yp };
+};
+
+export const filterDefectsByArea = (
+  selectionArea,
+  canvasSize,
+  defects,
+  angleDivision
+) => {
+  let filteredDefects = [];
+  switch (selectionArea.selectionType) {
+    case selectionType.full:
+      // render full defects!!
+      filteredDefects = defects;
+      break;
+    case selectionType.partial:
+      // render defects based on the selection made in area selector
+      selectionArea.areas.forEach((area) => {
+        const center = { x: canvasSize / 2, y: canvasSize / 2 };
+        const start = degreeToRadian(360 - area.angle - angleDivision);
+        const end = degreeToRadian(360 - area.angle);
+        const sectorStart = { x: Math.cos(start), y: Math.sin(start) };
+        const sectorEnd = { x: Math.cos(end), y: Math.sin(end) };
+        const startRadiusSquared = Math.pow(area.radius.from, 2);
+        const endRadiusSquared = Math.pow(area.radius.to, 2);
+
+        switch (area.shape) {
+          case shapes.circle:
+            defects.forEach((defect) => {
+              const isInsideRadius = isBetweenRadius(
+                { x: defect.x, y: defect.y },
+                center,
+                startRadiusSquared,
+                endRadiusSquared
+              );
+              if (isInsideRadius) {
+                filteredDefects.push(defect);
+              }
+            });
+            break;
+          case shapes.circleSector:
+            defects.forEach((defect) => {
+              const isInside = isInsideSector(
+                { x: defect.x, y: defect.y },
+                center,
+                sectorStart,
+                sectorEnd,
+                endRadiusSquared
+              );
+              if (isInside) {
+                filteredDefects.push(defect);
+              }
+            });
+            break;
+          case shapes.partialCircleSector:
+            defects.forEach((defect) => {
+              const isInsideRadius = isBetweenRadius(
+                { x: defect.x, y: defect.y },
+                center,
+                startRadiusSquared,
+                endRadiusSquared
+              );
+              const isInside = isInsideSector(
+                { x: defect.x, y: defect.y },
+                center,
+                sectorStart,
+                sectorEnd,
+                endRadiusSquared
+              );
+              if (isInside && isInsideRadius) {
+                filteredDefects.push(defect);
+              }
+            });
+            break;
+        }
+      });
+      break;
+    case selectionType.none:
+    default:
+      // wafer area fully unselected. no need to render defects.
+      filteredDefects = [];
+      break;
+  }
+
+  return filteredDefects;
+};
+
+const isBetweenRadius = (p, center, fromRadiusSquared, toRadiusSquared) => {
+  const x = Math.pow(p.x - center.x, 2);
+  const y = Math.pow(p.y - center.y, 2);
+  const isGreaterThanFromRadius = x + y > fromRadiusSquared;
+  const isLessThanToRadius = x + y < toRadiusSquared;
+
+  return isGreaterThanFromRadius && isLessThanToRadius;
+};
+
+const isInsideSector = (
+  point,
+  center,
+  sectorStart,
+  sectorEnd,
+  radiusSquared
+) => {
+  const relPoint = {
+    x: point.x - center.x,
+    y: point.y - center.y,
+  };
+
+  return (
+    !areClockwise(sectorStart, relPoint) &&
+    areClockwise(sectorEnd, relPoint) &&
+    isWithinRadius(relPoint, radiusSquared)
+  );
+};
+
+const areClockwise = (v1, v2) => {
+  return -v1.x * v2.y + v1.y * v2.x > 0;
+};
+
+const isWithinRadius = (v, radiusSquared) => {
+  return v.x * v.x + v.y * v.y <= radiusSquared;
+};
 
 export const generateDiesAndDefects = (
   canvasSize,
@@ -12,7 +146,6 @@ export const generateDiesAndDefects = (
   const topLeftY = waferCenter.y - waferRadius;
   const rightBottomX = waferCenter.x + waferRadius;
   const rightBottomY = waferCenter.y + waferRadius;
-
   const dieInfo = {
     topLeftX,
     topLeftY,
@@ -22,6 +155,7 @@ export const generateDiesAndDefects = (
   };
 
   const dieIndexes = getDies(dieInfo, waferCenter, waferRadius);
+  let dieCount = 0;
   const defectData = [];
   const dieData = removeEmptyRows(dieIndexes);
 
@@ -37,6 +171,7 @@ export const generateDiesAndDefects = (
         const dx = die["dx"];
         const dy = die["dy"];
         if (dx !== undefined && dy !== undefined) {
+          dieCount++;
           // generate defects for a die based on maxDefects
           const maxDefects = randomNumber(0, maxDefectsInDie, true);
           let defectCounter = 0;
@@ -67,7 +202,7 @@ export const generateDiesAndDefects = (
     });
   });
 
-  return [dieData, defectData];
+  return [dieData, defectData, dieCount];
 };
 
 const getDies = (dieInfo, center, waferRadius) => {
