@@ -14,12 +14,7 @@ export const rotate2D = (x, y, cx, cy, radian) => {
   return { x: xp, y: yp };
 };
 
-export const filterDefectsByArea = (
-  selectionArea,
-  canvasSize,
-  defects,
-  angleDivision
-) => {
+export const filterDefectsByArea = (selectionArea, canvasSize, defects) => {
   let filteredDefects = [];
   switch (selectionArea.selectionType) {
     case selectionType.full:
@@ -30,8 +25,8 @@ export const filterDefectsByArea = (
       // render defects based on the selection made in area selector
       selectionArea.areas.forEach((area) => {
         const center = { x: canvasSize / 2, y: canvasSize / 2 };
-        const start = degreeToRadian(360 - area.angle - angleDivision);
-        const end = degreeToRadian(360 - area.angle);
+        const start = degreeToRadian(360 - area.angle?.to);
+        const end = degreeToRadian(360 - area.angle?.from);
         const sectorStart = { x: Math.cos(start), y: Math.sin(start) };
         const sectorEnd = { x: Math.cos(end), y: Math.sin(end) };
         const startRadiusSquared = Math.pow(area.radius.from, 2);
@@ -158,11 +153,6 @@ export const generateDiesAndDefects = (
   let dieCount = 0;
   const defectData = [];
   const dieData = removeEmptyRows(dieIndexes);
-
-  const center = {
-    x: canvasSize / 2,
-    y: canvasSize / 2,
-  };
   const r = waferRadius - 5;
 
   dieData.forEach((row) => {
@@ -184,8 +174,8 @@ export const generateDiesAndDefects = (
               y,
               defectRadius,
               defectRadius,
-              center.x,
-              center.y,
+              waferCenter.x,
+              waferCenter.y,
               r
             );
             if (isInside) {

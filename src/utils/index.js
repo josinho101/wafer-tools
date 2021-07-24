@@ -40,3 +40,17 @@ export const uuid = () =>
   Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 export const convertNmToMm = (nanoMeter) => nanoMeter / 1000000;
+
+export const removeDuplicatesFrom2DArray = (array) => {
+  const uniques = [];
+  const itemsFound = {};
+  for (let i = 0, l = array.length; i < l; i++) {
+    const stringified = JSON.stringify(array[i]);
+    if (itemsFound[stringified]) {
+      continue;
+    }
+    uniques.push(array[i]);
+    itemsFound[stringified] = true;
+  }
+  return uniques;
+};

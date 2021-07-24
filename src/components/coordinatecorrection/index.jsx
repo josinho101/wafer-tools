@@ -155,21 +155,21 @@ const CoordinateCorrection = () => {
               </div>
               <TextField
                 required
-                label="X Offset (μm)"
+                label="X Movement (μm)"
                 value={offsetX}
                 onChange={onXOffsetChange}
                 className={classes.margin8PTop}
               />
               <TextField
                 required
-                label="Y Offset (μm)"
+                label="Y Movement (μm)"
                 value={offsetY}
                 onChange={onYOffsetChange}
                 className={classes.margin8PTop}
               />
               <TextField
                 required
-                label="Rotate angle (degree)"
+                label="Rotation angle (degree)"
                 value={rotateAngle}
                 onChange={onRotateAngleChange}
                 className={classes.margin8PTop}

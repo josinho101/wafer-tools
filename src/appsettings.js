@@ -14,6 +14,8 @@ export const appTabs = {
   waferDetails: 0,
   waferArea: 1,
   coordinateCorrection: 2,
+  waferViews: 3,
+  uniqueAndCommonDefects: 4,
 };
 
 export const colors = {

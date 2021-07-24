@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { useRef, useEffect } from "react";
-import { degreeToRadian } from "../../../utils";
+import { degreeToRadian, removeDuplicatesFrom2DArray } from "../../../utils";
 import { selectionType, shapes, colors } from "../../../appsettings";
 
 const WaferAreaSelector = (props) => {
@@ -78,7 +78,7 @@ const WaferAreaSelector = (props) => {
 
   const updateAreaSelection = () => {
     let selectedCount = 0;
-    const areasSelected = [];
+    let areasSelected = [];
     for (let graphics of stage.current.children) {
       if (graphics.isSelected) {
         selectedCount++;
@@ -93,10 +93,143 @@ const WaferAreaSelector = (props) => {
       type = selectionType.partial;
     }
 
+    if (type === selectionType.partial) {
+      // console.log("before simplification", areasSelected);
+      areasSelected = simplifySelection(areasSelected);
+      // console.log("after simplification", areasSelected);
+    }
+
     onSelectionChanged({
       selectionType: type,
       areas: areasSelected,
     });
+  };
+
+  const simplifySelection = (areas) => {
+    let simplifiedAreas = [];
+    areas = JSON.parse(JSON.stringify(areas));
+
+    if ((radiusDivision !== 0 || perimeter !== 0) && angleDivision === 0) {
+      // only radius or perimeter division selected.
+      simplifiedAreas = simplifySelectionsByRadius(areas);
+    } else if (angleDivision !== 0 && radiusDivision === 0 && perimeter === 0) {
+      // only angle division selected.
+      simplifiedAreas = simplifySelectionsByAngle(areas);
+    } else {
+      // angle and radius/perimeter division selected.
+      // since we can have parimeter division, radius won't be always in same interval.
+
+      /**
+       * Algorithm steps
+       *
+       * 1. Group all selections by radius
+       * 2. Check if selection areas in a radius group can form a circle.
+       *    2.1 - If we can form a cicle, then add a circle shape to simplified list
+       *    2.2 - remove all selection areas that form a cicle in previous step
+       * 3. Try grouping all cicles formed in step 2.
+       * 4. Try grouping selection areas by continus angle which cant be formed
+       *    as circle in step 2, to a max of 180 degree
+       */
+
+      let ranges = areas.map((area) => {
+        return { from: area.radius.from, to: area.radius.to };
+      });
+      // remove duplicate ranges and sort in ASC order of range.
+      ranges = removeDuplicatesFrom2DArray(ranges);
+
+      ranges.forEach((radiusRange) => {
+        // check if we have all parts selected in a radius range which form a circle.
+        const parts = areas.filter(
+          (item) =>
+            item.radius.from === radiusRange.from &&
+            item.radius.to === radiusRange.to
+        );
+        if (parts.length === 360 / angleDivision) {
+          // this will form a circle. remove parts from areas.
+          areas = areas.filter(
+            (item) =>
+              item.radius.from !== radiusRange.from &&
+              item.radius.to !== radiusRange.to
+          );
+          // add a circle shape with this radius range
+          simplifiedAreas.push({
+            shape: shapes.circle,
+            radius: { from: radiusRange.from, to: radiusRange.to },
+          });
+        }
+      });
+
+      // try grouping circles formed in step 1
+      if (simplifiedAreas.length) {
+        simplifiedAreas = simplifySelectionsByRadius(simplifiedAreas);
+      }
+
+      // try simplifying rest of areas which can't form a circle.
+      ranges.forEach((radiusRange) => {
+        const parts = areas.filter(
+          (item) =>
+            item.radius.from === radiusRange.from &&
+            item.radius.to === radiusRange.to
+        );
+
+        if (parts.length) {
+          const simplifiedByAngle = simplifySelectionsByAngle(parts);
+          simplifiedAreas.push(...simplifiedByAngle);
+        }
+      });
+    }
+
+    return simplifiedAreas;
+  };
+
+  const simplifySelectionsByRadius = (areas) => {
+    // sort based on asc order of "from radius"
+    const sortedAreas = areas.sort((a, b) => a.radius.from - b.radius.from);
+    const simplifiedAreas = [];
+    let prev = sortedAreas[0];
+    simplifiedAreas.push(prev);
+
+    for (const area of sortedAreas) {
+      const prevUpperBound = prev.radius.to;
+      const newLowerBound = area.radius.from;
+      const newUpperBound = area.radius.to;
+
+      if (prevUpperBound >= newLowerBound) {
+        prev.radius.to = Math.max(prevUpperBound, newUpperBound);
+      } else {
+        prev = area;
+        simplifiedAreas.push(prev);
+      }
+    }
+
+    return simplifiedAreas;
+  };
+
+  const simplifySelectionsByAngle = (areas) => {
+    // sort based on asc order of "from angle"
+    const sortedAreas = areas.sort((a, b) => a.angle.from - b.angle.from);
+    const simplifiedAreas = [];
+    let prev = sortedAreas[0];
+    simplifiedAreas.push(prev);
+
+    for (const area of sortedAreas) {
+      const prevLowerBound = prev.angle.from;
+      const prevUpperBound = prev.angle.to;
+      const newLowerBound = area.angle.from;
+      const newUpperBound = area.angle.to;
+
+      if (
+        prevUpperBound >= newLowerBound &&
+        Math.max(prevUpperBound, newUpperBound) - prevLowerBound <= 180
+      ) {
+        prev.angle.to = Math.max(prevUpperBound, newUpperBound);
+      } else {
+        prev = area;
+        simplifiedAreas.push(prev);
+      }
+    }
+
+    return simplifiedAreas;
   };
 
   const draw = () => {
@@ -136,7 +269,7 @@ const WaferAreaSelector = (props) => {
         const end = degreeToRadian(angle + angleDivision);
         const graphics = getArcGraphics(center, radius, start, end);
         graphics.properties = {
-          angle: angle,
+          angle: { from: angle, to: angle + angleDivision },
           shape: shapes.circleSector,
           radius: { from: radius - radiusDivision, to: radius },
         };
@@ -151,7 +284,7 @@ const WaferAreaSelector = (props) => {
           const end = degreeToRadian(angle + angleDivision);
           const graphics = getArcGraphics(center, radius, start, end);
           graphics.properties = {
-            angle: angle,
+            angle: { from: angle, to: angle + angleDivision },
             shape: shapes.partialCircleSector,
             radius: { from: radius - radiusDivision, to: radius },
           };
@@ -208,7 +341,7 @@ const WaferAreaSelector = (props) => {
           const end = degreeToRadian(angle + angleDivision);
           const graphics = getArcGraphics(center, r, start, end);
           graphics.properties = {
-            angle: angle,
+            angle: { from: angle, to: angle + angleDivision },
             shape: shapes.partialCircleSector,
             radius: { from: fromRadius, to: toRadius },
           };
@@ -231,7 +364,7 @@ const WaferAreaSelector = (props) => {
 
           const graphics = getArcGraphics(center, radius, start, end);
           graphics.properties = {
-            angle: angle,
+            angle: { from: angle, to: angle + angleDivision },
             shape: shapes.partialCircleSector,
             radius: { from: fromRadius, to: radius },
           };
@@ -240,7 +373,7 @@ const WaferAreaSelector = (props) => {
           if (drawPerimeter) {
             const graphics = getArcGraphics(center, pCircleRadius, start, end);
             graphics.properties = {
-              angle: angle,
+              angle: { from: angle, to: angle + angleDivision },
               shape: shapes.partialCircleSector,
               radius: { from: rMin, to: pCircleRadius },
             };

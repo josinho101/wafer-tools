@@ -58,8 +58,7 @@ const WaferArea = () => {
     const filteredItems = filterDefectsByArea(
       selectionArea,
       canvasSize,
-      defects,
-      waferAreaOptions.angle
+      defects
     );
     setFilteredDefects(filteredItems);
   }, [selectionArea, defects, waferAreaOptions]);
