@@ -149,11 +149,11 @@ export const generateDiesAndDefects = (
     diePitch,
   };
 
-  const dieIndexes = getDies(dieInfo, waferCenter, waferRadius);
+  const dieIndexes = getGridIndexes(dieInfo, waferCenter, waferRadius);
   let dieCount = 0;
   const defectData = [];
   const dieData = removeEmptyRows(dieIndexes);
-  const r = waferRadius - 5;
+  const radius = waferRadius - 5; // draw defects within margin of wafer radius
 
   dieData.forEach((row) => {
     row.forEach((die) => {
@@ -166,22 +166,26 @@ export const generateDiesAndDefects = (
           const maxDefects = randomNumber(0, maxDefectsInDie, true);
           let defectCounter = 0;
           while (defectCounter < maxDefects) {
-            const x = randomNumber(1, diePitch.width) + dx;
-            const y = randomNumber(1, diePitch.height) + dy;
+            const x = randomNumber(1, diePitch.width, true);
+            const y = randomNumber(1, diePitch.height, true);
+            const defectDx = x + dx;
+            const defectDy = y + dy;
             // check if defect is with in wafer circle. defect width & height to be 1 X 1
             const isInside = inside(
-              x,
-              y,
+              defectDx,
+              defectDy,
               defectRadius,
               defectRadius,
               waferCenter.x,
               waferCenter.y,
-              r
+              radius
             );
             if (isInside) {
               defectData.push({
-                x: x,
-                y: y,
+                x: defectDx,
+                y: defectDy,
+                xRel: x,
+                yRel: y,
                 color: getRandomColor(),
               });
               defectCounter++;
@@ -195,11 +199,10 @@ export const generateDiesAndDefects = (
   return [dieData, defectData, dieCount];
 };
 
-const getDies = (dieInfo, center, waferRadius) => {
+const getGridIndexes = (dieInfo, center, waferRadius) => {
   const { topLeftX, topLeftY, rightBottomX, rightBottomY, diePitch } = dieInfo;
-  const height = diePitch.height;
-  const width = diePitch.width;
-
+  let height = diePitch.height;
+  let width = diePitch.width;
   let dieIndexes = [];
   let x = 0;
   let y = 0;

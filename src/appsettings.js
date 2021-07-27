@@ -25,3 +25,9 @@ export const colors = {
   green: 0x00ff00,
   black: 0x000000,
 };
+
+export const waferViews = {
+  die: 0,
+  chip: 1,
+  none: 2,
+};

@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { useRef, useEffect } from "react";
-import { colors } from "../../appsettings";
+import { colors, waferViews } from "../../appsettings";
 
 const Wafer = (props) => {
   const {
@@ -12,6 +12,7 @@ const Wafer = (props) => {
     defects = [],
     canvasSize = 300,
     waferRadius = 150,
+    view = waferViews.die,
   } = props;
 
   const stage = useRef();
@@ -34,7 +35,7 @@ const Wafer = (props) => {
 
   useEffect(() => {
     draw();
-  }, [dies, defects]);
+  }, [dies, defects, view]);
 
   const draw = () => {
     const center = canvasSize / 2;
@@ -67,25 +68,44 @@ const Wafer = (props) => {
       stage.current.addChild(quadrantGraphics);
     }
 
-    // draw dies
-    const gridLines = new PIXI.Graphics();
-    gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
-    dies.forEach((row) => {
-      row.forEach((die) => {
-        if (die !== undefined) {
-          if (die["dx"] !== undefined && die["dy"] !== undefined) {
-            gridLines.drawRect(
-              die["dx"],
-              die["dy"],
-              diePitch.width,
-              diePitch.height
-            );
+    // draw grid lines based on wafer view
+    if (view !== waferViews.none) {
+      const gridLines = new PIXI.Graphics();
+      gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
+      dies.forEach((row) => {
+        row.forEach((die) => {
+          if (die !== undefined) {
+            if (die["dx"] !== undefined && die["dy"] !== undefined) {
+              gridLines.drawRect(
+                die["dx"],
+                die["dy"],
+                diePitch.width,
+                diePitch.height
+              );
+
+              // draw chips based on dimension
+              if (view === waferViews.chip) {
+                const maxColumns = diePitch.width / diePitch.chip.width;
+                const maxRows = diePitch.height / diePitch.chip.height;
+
+                for (let i = 0; i < maxColumns; i++) {
+                  for (let j = 0; j < maxRows; j++) {
+                    gridLines.drawRect(
+                      die["dx"] + i * diePitch.chip.width,
+                      die["dy"] + j * diePitch.chip.height,
+                      diePitch.chip.width,
+                      diePitch.chip.height
+                    );
+                  }
+                }
+              }
+            }
           }
-        }
+        });
       });
-    });
-    gridLines.endFill();
-    stage.current.addChild(gridLines);
+      gridLines.endFill();
+      stage.current.addChild(gridLines);
+    }
 
     // draw wafer defects
     const defectGraphics = new PIXI.Graphics();

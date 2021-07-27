@@ -12,6 +12,7 @@ import {
 import { useStyles } from "./style";
 import { useState } from "react";
 import { RotateLeft } from "@material-ui/icons/";
+import clsx from "clsx";
 
 const WaferAreaForm = (props) => {
   const classes = useStyles();
@@ -91,7 +92,7 @@ const WaferAreaForm = (props) => {
           </IconButton>
         </Tooltip>
       </div>
-      <div className={classes.controlGroup}>
+      <div className={clsx(classes.controlGroup, classes.selectWrapper)}>
         <Typography>{`Wafer diameter : ${waferDiameter} mm`}</Typography>
       </div>
       <div className={classes.controlGroup}>
@@ -128,7 +129,7 @@ const WaferAreaForm = (props) => {
             <MenuItem value={180}>180°</MenuItem>
           </Select>
         </FormControl>
-        <FormControl className={classes.formControl}>
+        <FormControl>
           <InputLabel>Outer circumference</InputLabel>
           <Select
             value={circumference}

@@ -12,6 +12,7 @@ import TabPanel from "../ui/tabpanel";
 import WaferArea from "../waferarea";
 import CoordinateCorrection from "../coordinatecorrection";
 import WaferDetails from "../waferdetails";
+import WaferViews from "../waferviews";
 
 const App = () => {
   const [selectedTab, setSelectedTab] = useState(appTabs.waferArea);
@@ -38,8 +39,8 @@ const App = () => {
                 value={appTabs.coordinateCorrection}
                 label="Coordinate Correction"
               />
-              {/* <Tab value={appTabs.waferViews} label="Wafer views" />
-              <Tab
+              <Tab value={appTabs.waferViews} label="Wafer views" />
+              {/* <Tab
                 value={appTabs.uniqueAndCommonDefects}
                 label="Unique and Common defects"
               /> */}
@@ -53,8 +54,10 @@ const App = () => {
             <TabPanel value={selectedTab} index={appTabs.coordinateCorrection}>
               <CoordinateCorrection />
             </TabPanel>
-            {/* <TabPanel value={selectedTab} index={appTabs.waferViews}></TabPanel>
-            <TabPanel
+            <TabPanel value={selectedTab} index={appTabs.waferViews}>
+              <WaferViews />
+            </TabPanel>
+            {/* <TabPanel
               value={selectedTab}
               index={appTabs.uniqueAndCommonDefects}
             ></TabPanel> */}

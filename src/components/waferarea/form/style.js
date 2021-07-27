@@ -9,8 +9,7 @@ export const useStyles = makeStyles((theme) => ({
     maxHeight: 400,
   },
   formWrapper: {
-    paddingTop: theme.spacing(2),
-    marginBottom: theme.spacing(3),
+    paddingTop: theme.spacing(1),
   },
   formControl: {
     marginRight: theme.spacing(2),
@@ -24,5 +23,10 @@ export const useStyles = makeStyles((theme) => ({
   buttonHolder: {
     float: "right",
     marginTop: -10,
+  },
+  selectWrapper: {
+    display: "flex",
+    width: "100%",
+    placeContent: "center",
   },
 }));
