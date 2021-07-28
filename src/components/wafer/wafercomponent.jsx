@@ -8,7 +8,8 @@ const WaferComponent = (props) => {
     scale = 1,
     defects = [],
     canvasSize = 300,
-    view = waferViews.die,
+    type = waferViews.die,
+    viewMode = waferViews.die,
     defectDiameter,
   } = props;
 
@@ -32,13 +33,13 @@ const WaferComponent = (props) => {
 
   useEffect(() => {
     draw();
-  }, [defects, view]);
+  }, [defects, type, viewMode]);
 
-  const getMaxComponentDimension = (canvasSize, diePitch, view) => {
+  const getMaxComponentDimension = (canvasSize, diePitch, type) => {
     const buffer = 0;
     let height = diePitch.height;
     let width = diePitch.width;
-    if (view === waferViews.chip) {
+    if (type === waferViews.chip) {
       height = diePitch.chip.height;
       width = diePitch.chip.width;
     }
@@ -56,7 +57,7 @@ const WaferComponent = (props) => {
     const { height, width, componentScale } = getMaxComponentDimension(
       canvasSize,
       diePitch,
-      view
+      type
     );
     const canvasMid = canvasSize / 2;
     const center = {
@@ -74,6 +75,30 @@ const WaferComponent = (props) => {
     graphics.drawRect(center.x, 0, width, height);
     graphics.endFill();
     stage.current.addChild(graphics);
+
+    // render chip grid if type is die and view mode is chip
+    if (type === waferViews.die && viewMode === waferViews.chip) {
+      const maxColumns = diePitch.width / diePitch.chip.width;
+      const maxRows = diePitch.height / diePitch.chip.height;
+      const gridLines = new PIXI.Graphics();
+      gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
+
+      for (let i = 0; i < maxColumns; i++) {
+        for (let j = 0; j < maxRows; j++) {
+          const x = i * diePitch.chip.width;
+          const y = j * diePitch.chip.height;
+          gridLines.drawRect(
+            x * componentScale,
+            y * componentScale,
+            diePitch.chip.width * componentScale,
+            diePitch.chip.height * componentScale
+          );
+        }
+      }
+
+      gridLines.endFill();
+      stage.current.addChild(gridLines);
+    }
 
     // draw wafer defects
     const defectGraphics = new PIXI.Graphics();

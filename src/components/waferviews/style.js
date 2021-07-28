@@ -25,6 +25,7 @@ export const useStyles = makeStyles((theme) => ({
   stackWrapper: {
     textAlign: "left",
     marginTop: theme.spacing(5),
+    marginRight: theme.spacing(4),
   },
   stackLabel: {
     marginBottom: theme.spacing(1),
@@ -32,11 +33,19 @@ export const useStyles = makeStyles((theme) => ({
   },
   rightWrapper: {
     marginLeft: theme.spacing(4),
+    display: "flex",
+    alignItems: "center",
   },
   waferLabels: {
     fontSize: 12,
   },
   labelWrapper: {
     textAlign: "left",
+    marginRight: theme.spacing(2),
+  },
+  radioControlGroup: {
+    display: "flex",
+    placeContent: "center",
+    marginBottom: theme.spacing(2),
   },
 }));

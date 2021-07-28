@@ -21,7 +21,7 @@ import WaferComponent from "../wafer/wafercomponent";
 const WaferViews = () => {
   const classes = useStyles();
 
-  const scale = 1.5;
+  const scale = 1.3;
   const waferRadius = 150;
   const defectDiameter = 1.5;
   const maxDefectsInDie = 2;
@@ -90,18 +90,20 @@ const WaferViews = () => {
                 Chip - {diePitch.chip.width} x {diePitch.chip.height} mm
               </Typography>
             </Box>
-            <Wafer
-              view={view}
-              scale={scale}
-              dies={dies}
-              diePitch={diePitch}
-              canvasSize={canvasSize}
-              waferRadius={waferRadius}
-              defectDiameter={defectDiameter}
-              defects={defects}
-            />
-            <Box className={classes.rightWrapper}>
-              <RadioGroup row value={view} onChange={onWaferViewChange}>
+            <Box>
+              <Box className={classes.resetWrapper}>
+                <Tooltip title="Reset">
+                  <IconButton aria-label="Reset" onClick={onResetTriggered}>
+                    <RotateLeft />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <RadioGroup
+                row
+                value={view}
+                className={classes.radioControlGroup}
+                onChange={onWaferViewChange}
+              >
                 <FormControlLabel
                   value={waferViews.die}
                   control={<Radio color="primary" size="small" />}
@@ -120,28 +122,48 @@ const WaferViews = () => {
                   label="None"
                   labelPlacement="right"
                 />
-                <FormControlLabel
-                  control={
-                    <Tooltip title="Reset">
-                      <IconButton aria-label="Reset" onClick={onResetTriggered}>
-                        <RotateLeft />
-                      </IconButton>
-                    </Tooltip>
-                  }
-                />
               </RadioGroup>
+              <Wafer
+                view={view}
+                scale={scale}
+                dies={dies}
+                diePitch={diePitch}
+                canvasSize={canvasSize}
+                waferRadius={waferRadius}
+                defectDiameter={defectDiameter}
+                defects={defects}
+              />
+            </Box>
+            <Box className={classes.rightWrapper}>
               <Box className={classes.stackWrapper}>
                 {view !== waferViews.none ? (
                   <Box>
                     <Typography className={classes.stackLabel}>
-                      {getStackLabel()}
+                      Die stack view
                     </Typography>
                     <WaferComponent
-                      view={view}
+                      viewMode={view}
+                      type={waferViews.die}
                       diePitch={diePitch}
-                      canvasSize={200}
+                      canvasSize={150}
                       defects={defects}
-                      defectDiameter={defectDiameter + 1}
+                      defectDiameter={defectDiameter}
+                    />
+                  </Box>
+                ) : null}
+              </Box>
+              <Box className={classes.stackWrapper}>
+                {view !== waferViews.none ? (
+                  <Box>
+                    <Typography className={classes.stackLabel}>
+                      Chip stack view
+                    </Typography>
+                    <WaferComponent
+                      type={waferViews.chip}
+                      diePitch={diePitch}
+                      canvasSize={125}
+                      defects={defects}
+                      defectDiameter={defectDiameter}
                     />
                   </Box>
                 ) : null}
