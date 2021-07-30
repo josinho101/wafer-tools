@@ -2,8 +2,10 @@ import {
   inside,
   removeEmptyRows,
   randomNumber,
+  randomDecimal,
   getRandomColor,
   degreeToRadian,
+  isPrimeNumber,
 } from "./";
 import { selectionType, shapes } from "../appsettings";
 
@@ -134,7 +136,8 @@ export const generateDiesAndDefects = (
   waferRadius,
   defectRadius,
   maxDefectsInDie,
-  diePitch
+  diePitch,
+  enablePrimeNumberCheckOnDieIndex = false
 ) => {
   const waferCenter = { x: canvasSize / 2, y: canvasSize / 2 };
   const topLeftX = waferCenter.x - waferRadius;
@@ -165,12 +168,17 @@ export const generateDiesAndDefects = (
           // generate defects for a die based on maxDefects
           const maxDefects = randomNumber(0, maxDefectsInDie, true);
           let defectCounter = 0;
-          while (defectCounter < maxDefects) {
-            const x = randomNumber(1, diePitch.width, true);
-            const y = randomNumber(1, diePitch.height, true);
+          let doReduce = true;
+          if (enablePrimeNumberCheckOnDieIndex) {
+            // check if die count is prime number (reduce number of defects being generated)
+            doReduce = isPrimeNumber(dieCount);
+          }
+          while (defectCounter < maxDefects && doReduce) {
+            const x = randomDecimal(0, diePitch.width);
+            const y = randomDecimal(0, diePitch.height);
             const defectDx = x + dx;
             const defectDy = y + dy;
-            // check if defect is with in wafer circle. defect width & height to be 1 X 1
+            // check if defect is with in wafer circle.
             const isInside = inside(
               defectDx,
               defectDy,

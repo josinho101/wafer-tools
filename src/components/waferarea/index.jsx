@@ -17,7 +17,7 @@ const WaferArea = () => {
   const waferRadius = 150;
   const waferDiameter = waferRadius * 2;
   const defectDiameter = 1;
-  const maxDefectsInDie = 50;
+  const maxDefectsInDie = 20;
   const canvasSize = waferRadius * 2 * scale;
   const diePitch = {
     height: 10,

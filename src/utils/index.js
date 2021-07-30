@@ -31,7 +31,12 @@ export const randomNumber = (min, max, includeZero) => {
     return Math.floor(Math.random() * max);
   }
 
-  return Math.random() * (max - min) + min;
+  return Math.random() * (max - min + 1) + min;
+};
+
+export const randomDecimal = (min, max) => {
+  let value = Math.random() * (max - min + 1) + min;
+  return +Number.parseFloat(value).toFixed(5);
 };
 
 export const degreeToRadian = (angle) => +(angle * (Math.PI / 180));
@@ -53,4 +58,9 @@ export const removeDuplicatesFrom2DArray = (array) => {
     itemsFound[stringified] = true;
   }
   return uniques;
+};
+
+export const isPrimeNumber = (num) => {
+  for (let i = 2; i < num; i++) if (num % i === 0) return false;
+  return num > 1;
 };

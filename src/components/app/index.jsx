@@ -34,12 +34,12 @@ const App = () => {
               scrollButtons="auto"
             >
               <Tab value={appTabs.waferDetails} label="Wafer Details" />
+              <Tab value={appTabs.waferViews} label="Wafer views" />
               <Tab value={appTabs.waferArea} label="Wafer Area" />
               <Tab
                 value={appTabs.coordinateCorrection}
                 label="Coordinate Correction"
               />
-              <Tab value={appTabs.waferViews} label="Wafer views" />
               {/* <Tab
                 value={appTabs.uniqueAndCommonDefects}
                 label="Unique and Common defects"
@@ -48,14 +48,14 @@ const App = () => {
             <TabPanel value={selectedTab} index={appTabs.waferDetails}>
               <WaferDetails />
             </TabPanel>
+            <TabPanel value={selectedTab} index={appTabs.waferViews}>
+              <WaferViews />
+            </TabPanel>
             <TabPanel value={selectedTab} index={appTabs.waferArea}>
               <WaferArea />
             </TabPanel>
             <TabPanel value={selectedTab} index={appTabs.coordinateCorrection}>
               <CoordinateCorrection />
-            </TabPanel>
-            <TabPanel value={selectedTab} index={appTabs.waferViews}>
-              <WaferViews />
             </TabPanel>
             {/* <TabPanel
               value={selectedTab}

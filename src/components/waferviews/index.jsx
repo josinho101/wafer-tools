@@ -1,5 +1,7 @@
 import clsx from "clsx";
 import Wafer from "../wafer";
+import Chip from "../wafer/chip";
+import Die from "../wafer/die";
 import { useStyles } from "./style";
 import { useState, useEffect } from "react";
 import {
@@ -16,7 +18,6 @@ import {
 import { generateDiesAndDefects } from "../../utils/waferhelper";
 import { waferViews } from "../../appsettings";
 import { RotateLeft } from "@material-ui/icons";
-import WaferComponent from "../wafer/wafercomponent";
 
 const WaferViews = () => {
   const classes = useStyles();
@@ -43,7 +44,8 @@ const WaferViews = () => {
       waferRadius,
       defectDiameter,
       maxDefectsInDie,
-      diePitch
+      diePitch,
+      true
     );
     setDies(dies);
     setDefects(defects);
@@ -55,17 +57,6 @@ const WaferViews = () => {
 
   const onResetTriggered = () => {
     setDoReset(Date.now());
-  };
-
-  const getStackLabel = () => {
-    let pre = "";
-    if (view === waferViews.chip) {
-      pre = "Chip";
-    } else if (view === waferViews.die) {
-      pre = "Die";
-    }
-
-    return pre + " stack view";
   };
 
   return (
@@ -136,37 +127,31 @@ const WaferViews = () => {
             </Box>
             <Box className={classes.rightWrapper}>
               <Box className={classes.stackWrapper}>
-                {view !== waferViews.none ? (
-                  <Box>
-                    <Typography className={classes.stackLabel}>
-                      Die stack view
-                    </Typography>
-                    <WaferComponent
-                      viewMode={view}
-                      type={waferViews.die}
-                      diePitch={diePitch}
-                      canvasSize={150}
-                      defects={defects}
-                      defectDiameter={defectDiameter}
-                    />
-                  </Box>
-                ) : null}
+                <Box>
+                  <Typography className={classes.stackLabel}>
+                    Die stack view
+                  </Typography>
+                  <Die
+                    viewMode={view}
+                    diePitch={diePitch}
+                    canvasSize={175}
+                    defects={defects}
+                    defectDiameter={defectDiameter}
+                  />
+                </Box>
               </Box>
               <Box className={classes.stackWrapper}>
-                {view !== waferViews.none ? (
-                  <Box>
-                    <Typography className={classes.stackLabel}>
-                      Chip stack view
-                    </Typography>
-                    <WaferComponent
-                      type={waferViews.chip}
-                      diePitch={diePitch}
-                      canvasSize={125}
-                      defects={defects}
-                      defectDiameter={defectDiameter}
-                    />
-                  </Box>
-                ) : null}
+                <Box>
+                  <Typography className={classes.stackLabel}>
+                    Chip stack view
+                  </Typography>
+                  <Chip
+                    diePitch={diePitch}
+                    canvasSize={150}
+                    defects={defects}
+                    defectDiameter={defectDiameter}
+                  />
+                </Box>
               </Box>
             </Box>
           </Box>
