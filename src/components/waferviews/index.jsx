@@ -24,7 +24,7 @@ const WaferViews = () => {
 
   const scale = 1.3;
   const waferRadius = 150;
-  const defectDiameter = 1.5;
+  const defectDiameter = 2;
   const maxDefectsInDie = 2;
   const canvasSize = waferRadius * 2 * scale;
   const diePitch = {
@@ -99,19 +99,19 @@ const WaferViews = () => {
                   value={waferViews.die}
                   control={<Radio color="primary" size="small" />}
                   label="Die"
-                  labelPlacement="right"
+                  labelPlacement="end"
                 />
                 <FormControlLabel
                   value={waferViews.chip}
                   control={<Radio color="primary" size="small" />}
                   label="Chip"
-                  labelPlacement="right"
+                  labelPlacement="end"
                 />
                 <FormControlLabel
                   value={waferViews.none}
                   control={<Radio color="primary" size="small" />}
                   label="None"
-                  labelPlacement="right"
+                  labelPlacement="end"
                 />
               </RadioGroup>
               <Wafer

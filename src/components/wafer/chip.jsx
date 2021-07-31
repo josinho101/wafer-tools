@@ -56,8 +56,6 @@ const Chip = (props) => {
 
     stage.current = new PIXI.Container(0x000000, true);
     stage.current.scale.set(scale);
-    // stage.current.position.set(canvasMid, canvasMid);
-    // stage.current.pivot.set(canvasMid, canvasMid);
 
     const graphics = new PIXI.Graphics();
     graphics.beginFill(0xffffff);
@@ -70,17 +68,8 @@ const Chip = (props) => {
     defects.forEach((defect) => {
       const xRel = defect.xRel;
       const yRel = defect.yRel;
-      // const x =
-      //   ((xRel - Math.floor(xRel / chip.width)) /
-      //     (diePitch.width / chip.width)) *
-      //   chip.scale;
-      // const y =
-      //   ((yRel - Math.floor(yRel / chip.height)) /
-      //     (diePitch.height / chip.height)) *
-      //   chip.scale;
       const x = xRel - Math.floor(xRel / chip.width) * chip.width;
       const y = yRel - Math.floor(yRel / chip.height) * chip.height;
-      console.log(x, y);
       defectGraphics.beginFill(defect.color);
       defectGraphics.drawCircle(x, y, defectDiameter / scale);
       defectGraphics.endFill();
