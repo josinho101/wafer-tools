@@ -1,4 +1,3 @@
-# Wafer area selector
+# Wafer Tools
 
-This tool enables to select different areas in a wafer and show only defects in that particular area.
-
+Wafer tools are set of tools which allow inspection of wafer defects easily.
