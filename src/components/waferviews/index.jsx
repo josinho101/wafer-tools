@@ -12,12 +12,12 @@ import {
   RadioGroup,
   FormControlLabel,
   Tooltip,
-  IconButton,
   Typography,
 } from "@material-ui/core";
 import { generateDiesAndDefects } from "../../utils/waferhelper";
 import { waferViews } from "../../appsettings";
 import { RotateLeft } from "@material-ui/icons";
+import IconButton from "../ui/iconbutton";
 
 const WaferViews = () => {
   const classes = useStyles();
@@ -85,7 +85,7 @@ const WaferViews = () => {
               <Box className={classes.resetWrapper}>
                 <Tooltip title="Reset">
                   <IconButton aria-label="Reset" onClick={onResetTriggered}>
-                    <RotateLeft />
+                    <RotateLeft fontSize="small" />
                   </IconButton>
                 </Tooltip>
               </Box>

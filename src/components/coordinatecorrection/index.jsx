@@ -133,9 +133,9 @@ const CoordinateCorrection = () => {
                     <IconButton
                       onClick={onReset}
                       aria-label="Reset"
-                      className={classes.margin}
+                      className={classes.resetButton}
                     >
-                      <RotateLeft />
+                      <RotateLeft fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 </div>

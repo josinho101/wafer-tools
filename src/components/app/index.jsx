@@ -15,7 +15,7 @@ import WaferDetails from "../waferdetails";
 import WaferViews from "../waferviews";
 
 const App = () => {
-  const [selectedTab, setSelectedTab] = useState(appTabs.waferArea);
+  const [selectedTab, setSelectedTab] = useState(appTabs.waferDetails);
 
   const onTabChanged = (e, selected) => {
     setSelectedTab(selected);

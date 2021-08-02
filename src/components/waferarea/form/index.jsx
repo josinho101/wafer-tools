@@ -6,13 +6,13 @@ import {
   FormControlLabel,
   Checkbox,
   Typography,
-  IconButton,
   Tooltip,
 } from "@material-ui/core";
 import { useStyles } from "./style";
 import { useState } from "react";
 import { RotateLeft } from "@material-ui/icons/";
 import clsx from "clsx";
+import IconButton from "../../ui/iconbutton";
 
 const WaferAreaForm = (props) => {
   const classes = useStyles();
@@ -83,12 +83,8 @@ const WaferAreaForm = (props) => {
     <div className={classes.formWrapper}>
       <div className={classes.buttonHolder}>
         <Tooltip title="Reset" aria-label="Reset">
-          <IconButton
-            onClick={onResetTriggered}
-            aria-label="Reset"
-            className={classes.margin}
-          >
-            <RotateLeft />
+          <IconButton onClick={onResetTriggered} aria-label="Reset">
+            <RotateLeft fontSize="small" />
           </IconButton>
         </Tooltip>
       </div>

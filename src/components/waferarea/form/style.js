@@ -22,7 +22,7 @@ export const useStyles = makeStyles((theme) => ({
   },
   buttonHolder: {
     float: "right",
-    marginTop: -10,
+    marginRight: theme.spacing(1),
   },
   selectWrapper: {
     display: "flex",

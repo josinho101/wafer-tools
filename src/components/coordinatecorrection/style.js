@@ -25,4 +25,7 @@ export const useStyles = makeStyles((theme) => ({
   margin24PTop: {
     marginTop: theme.spacing(3),
   },
+  resetButton: {
+    margin: 0,
+  },
 }));
