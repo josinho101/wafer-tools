@@ -6,6 +6,7 @@ import {
   getRandomColor,
   degreeToRadian,
   isPrimeNumber,
+  convertNmToMm,
 } from "./";
 import { selectionType, shapes } from "../appsettings";
 
@@ -129,6 +130,82 @@ const areClockwise = (v1, v2) => {
 
 const isWithinRadius = (v, radiusSquared) => {
   return v.x * v.x + v.y * v.y <= radiusSquared;
+};
+
+export const generateDiesAndDefects2 = (
+  canvasSize,
+  waferRadius,
+  diePitch,
+  dieOrigin
+) => {
+  const dies = [];
+  const center = {
+    x: canvasSize / 2,
+    y: canvasSize / 2,
+  };
+  const dieWidth = diePitch.width;
+  const dieHeight = diePitch.height;
+  const doEnableDie = diePitch.width === waferRadius * 2;
+  const maxY = Math.floor(waferRadius / dieHeight);
+  const maxX = Math.floor(waferRadius / dieWidth);
+
+  // top right quadrant
+  for (let y = 1; y <= maxY; y++) {
+    for (let x = 0; x <= maxX; x++) {
+      const dx = center.x + x * dieWidth - dieOrigin.x;
+      const dy = center.y - y * dieHeight - dieOrigin.y;
+      if (
+        inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
+        doEnableDie
+      ) {
+        dies.push({ dx, dy, xIndex: x, yIndex: y - 1 });
+      }
+    }
+  }
+
+  // top left quadrant
+  for (let y = 1; y <= maxY; y++) {
+    for (let x = 1; x <= maxX; x++) {
+      const dx = center.x - x * dieWidth - dieOrigin.x;
+      const dy = center.y - y * dieHeight - dieOrigin.y;
+      if (
+        inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
+        doEnableDie
+      ) {
+        dies.push({ dx, dy, xIndex: -x, yIndex: y - 1 });
+      }
+    }
+  }
+
+  // bottom right quadrant
+  for (let y = 0; y <= maxY; y++) {
+    for (let x = 0; x <= maxX; x++) {
+      const dx = center.x + x * dieWidth - dieOrigin.x;
+      const dy = center.y + y * dieHeight - dieOrigin.y;
+      if (
+        inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
+        doEnableDie
+      ) {
+        dies.push({ dx, dy, xIndex: x, yIndex: -y - 1 });
+      }
+    }
+  }
+
+  // bottom right quadrant
+  for (let y = 0; y <= maxY; y++) {
+    for (let x = 1; x <= maxX; x++) {
+      const dx = center.x - x * dieWidth - dieOrigin.x;
+      const dy = center.y + y * dieHeight - dieOrigin.y;
+      if (
+        inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
+        doEnableDie
+      ) {
+        dies.push({ dx, dy, xIndex: -x, yIndex: -y - 1 });
+      }
+    }
+  }
+
+  return [dies, []];
 };
 
 export const generateDiesAndDefects = (

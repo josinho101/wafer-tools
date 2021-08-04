@@ -28,8 +28,8 @@ const WaferViews = () => {
   const maxDefectsInDie = 2;
   const canvasSize = waferRadius * 2 * scale;
   const diePitch = {
-    height: 25,
-    width: 25,
+    height: 20,
+    width: 20,
     chip: { width: 5, height: 2.5 },
   };
 

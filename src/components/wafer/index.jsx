@@ -20,6 +20,7 @@ const Wafer = (props) => {
   const renderer = useRef();
 
   useEffect(() => {
+    PIXI.settings.RESOLUTION = 1;
     renderer.current = PIXI.autoDetectRenderer(canvasSize, canvasSize, {
       transparent: true,
       antialias: true,
