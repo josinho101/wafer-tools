@@ -6,7 +6,6 @@ import {
   getRandomColor,
   degreeToRadian,
   isPrimeNumber,
-  convertNmToMm,
 } from "./";
 import { selectionType, shapes } from "../appsettings";
 
@@ -132,6 +131,63 @@ const isWithinRadius = (v, radiusSquared) => {
   return v.x * v.x + v.y * v.y <= radiusSquared;
 };
 
+export const rotateDies2D = (dies, diePitch, angle, canvasSize) => {
+  const dieWidth = diePitch.width;
+  const dieHeight = diePitch.height;
+  const center = { x: canvasSize / 2, y: canvasSize / 2 };
+  let rotatedDies = [];
+
+  switch (angle) {
+    case 0:
+      rotatedDies = dies;
+      break;
+    case 90:
+      rotatedDies = dies.map((die) => {
+        const result = rotate2D(
+          die.dx,
+          die.dy,
+          center.x,
+          center.y,
+          degreeToRadian(angle)
+        );
+        die.dx = result.x - dieHeight;
+        die.dy = result.y;
+        return die;
+      });
+      break;
+    case 180:
+      rotatedDies = dies.map((die) => {
+        const result = rotate2D(
+          die.dx,
+          die.dy,
+          center.x,
+          center.y,
+          degreeToRadian(angle)
+        );
+        die.dx = result.x - dieWidth;
+        die.dy = result.y - dieHeight;
+        return die;
+      });
+      break;
+    case 270:
+      rotatedDies = dies.map((die) => {
+        const result = rotate2D(
+          die.dx,
+          die.dy,
+          center.x,
+          center.y,
+          degreeToRadian(angle)
+        );
+        die.dx = result.x;
+        die.dy = result.y - dieWidth;
+        return die;
+      });
+      break;
+  }
+
+  return rotatedDies;
+};
+
 export const generateDiesAndDefects2 = (
   canvasSize,
   waferRadius,
@@ -158,7 +214,7 @@ export const generateDiesAndDefects2 = (
         inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
         doEnableDie
       ) {
-        dies.push({ dx, dy, xIndex: x, yIndex: y - 1 });
+        dies.push({ dx, dy, xIndex: x, yIndex: y - 1, color: 0xfcf0ed });
       }
     }
   }
@@ -172,7 +228,7 @@ export const generateDiesAndDefects2 = (
         inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
         doEnableDie
       ) {
-        dies.push({ dx, dy, xIndex: -x, yIndex: y - 1 });
+        dies.push({ dx, dy, xIndex: -x, yIndex: y - 1, color: 0xfafced });
       }
     }
   }
@@ -186,12 +242,12 @@ export const generateDiesAndDefects2 = (
         inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
         doEnableDie
       ) {
-        dies.push({ dx, dy, xIndex: x, yIndex: -y - 1 });
+        dies.push({ dx, dy, xIndex: x, yIndex: -y - 1, color: 0xedfcf5 });
       }
     }
   }
 
-  // bottom right quadrant
+  // bottom left quadrant
   for (let y = 0; y <= maxY; y++) {
     for (let x = 1; x <= maxX; x++) {
       const dx = center.x - x * dieWidth - dieOrigin.x;
@@ -200,7 +256,7 @@ export const generateDiesAndDefects2 = (
         inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius) ||
         doEnableDie
       ) {
-        dies.push({ dx, dy, xIndex: -x, yIndex: -y - 1 });
+        dies.push({ dx, dy, xIndex: -x, yIndex: -y - 1, color: 0xedeefc });
       }
     }
   }

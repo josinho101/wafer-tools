@@ -14,7 +14,9 @@ const Wafer = (props) => {
     waferRadius = 150,
     view = waferViews.die,
     showDieOrigin,
+    showWaferCenter,
     dieOrigin = { x: 0, y: 0 },
+    angle = 0,
   } = props;
 
   const stage = useRef();
@@ -54,24 +56,27 @@ const Wafer = (props) => {
     circle.endFill();
     stage.current.addChild(circle);
 
-    const centerCircle = new PIXI.Graphics();
-    centerCircle.beginFill(0xff0000);
-    centerCircle.drawCircle(center, center, 1.5);
-    centerCircle.endFill();
-    stage.current.addChild(centerCircle);
-
     if (view !== waferViews.none) {
+      let dieWidth = diePitch.width;
+      let dieHeight = diePitch.height;
+
+      if (angle === 90 || angle === 270) {
+        dieWidth = diePitch.height;
+        dieHeight = diePitch.width;
+      }
+
       const gridLines = new PIXI.Graphics();
       gridLines.lineStyle(0.28, 0x3d3d3d, 0.5);
       dies.forEach((die) => {
-        gridLines.drawRect(die.dx, die.dy, diePitch.width, diePitch.height);
+        gridLines.beginFill(die.color);
+        gridLines.drawRect(die.dx, die.dy, dieWidth, dieHeight);
         const text = new PIXI.Text(`(${die.xIndex},${die.yIndex})`, {
           fontFamily: "Arial",
           fontSize: 5,
           fontWeight: "bold",
         });
-        text.position.x = die.dx + diePitch.width / 2 - text.width / 2;
-        text.position.y = die.dy + diePitch.height / 2 - text.height / 2;
+        text.position.x = die.dx + dieWidth / 2 - text.width / 2;
+        text.position.y = die.dy + dieHeight / 2 - text.height / 2;
         gridLines.addChild(text);
       });
       gridLines.endFill();
@@ -87,7 +92,7 @@ const Wafer = (props) => {
       const p2Y = center.y;
 
       const quadrantGraphics = new PIXI.Graphics();
-      quadrantGraphics.lineStyle(0.5, 0xff0000);
+      quadrantGraphics.lineStyle(0.75, 0x000000);
       quadrantGraphics.moveTo(p1X, p1Y);
       quadrantGraphics.lineTo(p1X, p1Y + waferRadius * 2);
       quadrantGraphics.moveTo(p2X, p2Y);
@@ -96,13 +101,46 @@ const Wafer = (props) => {
     }
 
     if (showDieOrigin) {
-      const centerX = center - dieOrigin.x;
-      const centerY = center - dieOrigin.y;
+      let centerX = center - dieOrigin.x;
+      let centerY = center - dieOrigin.y;
+
+      if (angle === 90 || angle === 270) {
+        centerX = center + dieOrigin.y;
+        centerY = center + dieOrigin.x;
+      }
+
+      switch (angle) {
+        case 0:
+          centerX = center - dieOrigin.x;
+          centerY = center - dieOrigin.y;
+          break;
+        case 90:
+          centerX = center + dieOrigin.y;
+          centerY = center - dieOrigin.x;
+          break;
+        case 180:
+          centerX = center + dieOrigin.x;
+          centerY = center + dieOrigin.y;
+          break;
+        case 270:
+          centerX = center - dieOrigin.y;
+          centerY = center + dieOrigin.x;
+          break;
+      }
+
       const dieOriginGraphics = new PIXI.Graphics();
       dieOriginGraphics.beginFill(0x0000ff);
       dieOriginGraphics.drawCircle(centerX, centerY, 1.5);
       dieOriginGraphics.endFill();
       stage.current.addChild(dieOriginGraphics);
+    }
+
+    if (showWaferCenter) {
+      const centerCircle = new PIXI.Graphics();
+      centerCircle.beginFill(0xff0000);
+      centerCircle.drawCircle(center, center, 1.5);
+      centerCircle.endFill();
+      stage.current.addChild(centerCircle);
     }
 
     // draw grid lines based on wafer view

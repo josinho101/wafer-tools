@@ -30,12 +30,21 @@ export const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     marginLeft: theme.spacing(4),
+    marginRight: theme.spacing(4),
+    placeContent: "center",
+    userSelect: "none",
   },
   marginTop16: {
     marginTop: theme.spacing(2),
   },
+  marginTop32: {
+    marginTop: theme.spacing(4),
+  },
   countWrapper: {
     textAlign: "left",
     marginTop: theme.spacing(2),
+  },
+  alignLeft: {
+    textAlign: "left",
   },
 }));
