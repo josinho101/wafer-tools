@@ -37,7 +37,7 @@ const AdderDefects = () => {
     defects.W1P1.defects
   );
   const [selectedWafers, setSelectedWafers] = useState({ W1P1: true });
-  const [tolerance, setTolerance] = useState(4000000);
+  const [tolerance, setTolerance] = useState(1000000);
 
   useEffect(() => {
     const [dies] = generateDiesAndDefects2(
@@ -269,7 +269,7 @@ const AdderDefects = () => {
                   style={{ maxWidth: "100%", display: "flex", marginTop: 32 }}
                 >
                   <WaferHolder
-                    defectDiameter={0.5}
+                    defectDiameter={1}
                     scale={outputScale}
                     dieOrigin={dieOrigin}
                     dies={viewWaferDies}

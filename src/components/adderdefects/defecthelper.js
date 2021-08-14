@@ -15,9 +15,9 @@ export const getDefects = () => {
   //   { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
   // ];
   const defects2 = [
-    { xIndex: 1, yIndex: 1, xRel: 2125000, yRel: 2725269, color: 0x02a102 },
-    { xIndex: 3, yIndex: 5, xRel: 5525600, yRel: 7725169, color: 0x02a102 },
-    { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0x02a102 },
+    { xIndex: 1, yIndex: 1, xRel: 5125000, yRel: 1725269, color: 0x02a102 },
+    { xIndex: 3, yIndex: 5, xRel: 7525600, yRel: 7725169, color: 0x02a102 },
+    { xIndex: -4, yIndex: 7, xRel: 6025600, yRel: 4726169, color: 0x02a102 },
     { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
   ];
   const defects3 = [
@@ -58,6 +58,46 @@ const getRadius = (x, y) => {
   return radius;
 };
 
+const getDefectFilter = (defect, die, center, diePitch, tolerance) => {
+  const x = die.dx + convertNmToMm(defect.xRel) - center.x;
+  const y = die.dy - convertNmToMm(defect.yRel) + diePitch.height - center.y;
+
+  const tLeft = { x: x - tolerance, y: y - tolerance }; // top left
+  const tRight = { x: x + tolerance, y: y - tolerance }; // top right
+  const bLeft = { x: x - tolerance, y: y + tolerance }; // bottom left
+  const bRight = { x: x + tolerance, y: y + tolerance }; // bottom right
+
+  let fromRadius, toRadius, fromAngle, toAngle;
+
+  if (Math.sign(defect.xIndex) >= 0 && Math.sign(defect.yIndex) >= 0) {
+    // 1st quadrant
+    fromRadius = getRadius(Math.abs(bLeft.x), Math.abs(bLeft.y));
+    toRadius = getRadius(Math.abs(tRight.x), Math.abs(tRight.y));
+    fromAngle = getAngle(bRight.x, bRight.y);
+    toAngle = getAngle(tLeft.x, tLeft.y);
+  } else if (Math.sign(defect.xIndex) < 0 && Math.sign(defect.yIndex) >= 0) {
+    // 2nd quadrant
+    fromRadius = getRadius(Math.abs(bRight.x), Math.abs(bRight.y));
+    toRadius = getRadius(Math.abs(tLeft.x), Math.abs(tLeft.y));
+    fromAngle = getAngle(tRight.x, tRight.y);
+    toAngle = getAngle(bLeft.x, bLeft.y);
+  } else if (Math.sign(defect.xIndex) < 0 && Math.sign(defect.yIndex) < 0) {
+    // 3rd quadrant
+    fromRadius = getRadius(Math.abs(tRight.x), Math.abs(tRight.y));
+    toRadius = getRadius(Math.abs(bLeft.x), Math.abs(bLeft.y));
+    fromAngle = getAngle(tLeft.x, tLeft.y);
+    toAngle = getAngle(bRight.x, bRight.y);
+  } else if (Math.sign(defect.xIndex) >= 0 && Math.sign(defect.yIndex) < 0) {
+    // 4th quadrant
+    fromRadius = getRadius(Math.abs(tLeft.x), Math.abs(tLeft.y));
+    toRadius = getRadius(Math.abs(bRight.x), Math.abs(bRight.y));
+    fromAngle = getAngle(bLeft.x, bLeft.y);
+    toAngle = getAngle(tRight.x, tRight.y);
+  }
+
+  return { fromRadius, toRadius, fromAngle, toAngle };
+};
+
 export const getAdderDefects = (
   wafers,
   tolerance,
@@ -89,7 +129,7 @@ export const getAdderDefects = (
         die.dy - convertNmToMm(defect.yRel) + diePitch.height - center.y;
 
       // find radius and angle of defect from wafer center.
-      const radius = getRadius(x, y); // r = √(x^2 + y^2)
+      const radius = getRadius(Math.abs(x), Math.abs(y)); // r = √(x^2 + y^2)
       const angle = getAngle(x, y); // for better understanding converting radian to angle. No need in real application.
 
       defect.radius = radius;
@@ -118,72 +158,32 @@ export const getAdderDefects = (
     tolerance = convertNmToMm(tolerance);
 
     lastResult.defects.forEach((defect) => {
-      // get defects with in tolerance limit from other process to check for carry-over
-      // find die of this defect to get top left point (dx, dy)
       const die = dies.filter(
         (die) => die.xIndex === defect.xIndex && die.yIndex === defect.yIndex
       )[0];
-      const x = die.dx + convertNmToMm(defect.xRel) - center.x;
-      const y =
-        die.dy - convertNmToMm(defect.yRel) + diePitch.height - center.y;
-
-      // find rectangle coordinates by making defect as center to filter defects of other inspections.
-      const topLeft = { x: x - tolerance, y: y - tolerance };
-      const topRight = { x: topLeft.x + 2 * tolerance, y: topLeft.y };
-      const bottomLeft = { x: topLeft.x, y: topLeft.y + 2 * tolerance };
-      const bottomRight = {
-        x: topLeft.x + 2 * tolerance,
-        y: topLeft.y + 2 * tolerance,
-      };
-
-      const angleFilter = {
-        start: getAngle(topRight.x, topRight.y),
-        end: getAngle(bottomLeft.x, bottomLeft.y),
-      };
-
-      // find start and end radius for filtering defects
-      const fromRadius = getRadius(topLeft.x, topLeft.y);
-      const toRadius = getRadius(bottomRight.x, bottomRight.y);
+      const filter = getDefectFilter(defect, die, center, diePitch, tolerance);
 
       console.log(
         `Current defect - xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
       );
-      console.log(`Radius filter - from: ${fromRadius}, to: ${toRadius}`);
       console.log(
-        `Angle filter - from: ${angleFilter.start}, to: ${angleFilter.end}`
+        `Radius - from: ${filter.fromRadius}, to: ${filter.toRadius}`
       );
+      console.log(`Angle - from: ${filter.fromAngle}, to: ${filter.toAngle}`);
 
       remainingResults.forEach((wafer) => {
         const defects = wafer.defects.filter((defect) => {
           return (
-            defect.radius >= fromRadius &&
-            defect.radius <= toRadius &&
-            defect.angle >= angleFilter.start &&
-            defect.angle <= angleFilter.end
+            defect.radius >= filter.fromRadius &&
+            defect.radius <= filter.toRadius &&
+            defect.angle >= filter.fromAngle &&
+            defect.angle <= filter.toAngle
           );
         });
-        if (defects.length) {
-          console.log(defects);
-        } else {
-          console.log(wafer.defects);
-        }
-        // wafer.defects.forEach((defect) => {
-        //   console.log(
-        //     `xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
-        //   );
-        // });
+        console.log("Filtered defects", defects);
       });
 
-      // console.log("Radius filter from:", fromRadius);
-      // console.log("Radius filter to:", toRadius);
-      // console.log("Angle filter:", angleFilter.start, angleFilter.end);
-      // console.log(
-      //   "defect radius:",
-      //   defect.radius,
-      //   "defect angle:",
-      //   defect.angle
-      // );
-      console.log("**********************");
+      console.log("**************************");
     });
   }
 
