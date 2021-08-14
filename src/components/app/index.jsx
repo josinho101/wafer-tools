@@ -14,6 +14,7 @@ import CoordinateCorrection from "../coordinatecorrection";
 import WaferDetails from "../waferdetails";
 import WaferViews from "../waferviews";
 import SystemCoordinates from "../systemcoordinates";
+import AdderDefects from "../adderdefects";
 
 const App = () => {
   const [selectedTab, setSelectedTab] = useState(appTabs.systemCoordinates);
@@ -45,10 +46,7 @@ const App = () => {
                 value={appTabs.systemCoordinates}
                 label="System Coordinates"
               />
-              {/* <Tab
-                value={appTabs.uniqueAndCommonDefects}
-                label="Unique and Common defects"
-              /> */}
+              <Tab value={appTabs.adderDefects} label="Adder defects" />
             </Tabs>
             <TabPanel value={selectedTab} index={appTabs.waferDetails}>
               <WaferDetails />
@@ -65,10 +63,9 @@ const App = () => {
             <TabPanel value={selectedTab} index={appTabs.systemCoordinates}>
               <SystemCoordinates />
             </TabPanel>
-            {/* <TabPanel
-              value={selectedTab}
-              index={appTabs.uniqueAndCommonDefects}
-            ></TabPanel> */}
+            <TabPanel value={selectedTab} index={appTabs.adderDefects}>
+              <AdderDefects />
+            </TabPanel>
           </AppBar>
         </div>
       </ThemeProvider>

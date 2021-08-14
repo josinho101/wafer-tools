@@ -47,4 +47,16 @@ export const useStyles = makeStyles((theme) => ({
   alignLeft: {
     textAlign: "left",
   },
+  circle: {
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    marginRight: theme.spacing(1),
+  },
+  circleLabel: {
+    fontSize: 10,
+  },
+  labelWrapper: {
+    marginBottom: theme.spacing(4),
+  },
 }));

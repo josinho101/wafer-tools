@@ -41,6 +41,8 @@ export const randomDecimal = (min, max) => {
 
 export const degreeToRadian = (angle) => +(angle * (Math.PI / 180));
 
+export const radianToDegree = (radians) => radians * (180 / Math.PI);
+
 export const uuid = () =>
   Date.now().toString(36) + Math.random().toString(36).substr(2);
 

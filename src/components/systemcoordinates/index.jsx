@@ -12,6 +12,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  FormControlLabel,
 } from "@material-ui/core";
 import Wafer from "./wafer";
 import { generateDiesAndDefects2, rotateDies2D } from "../../utils/waferhelper";
@@ -25,8 +26,8 @@ const SystemCoordinates = () => {
   const maxDefectsInDie = 50;
   const canvasSize = waferRadius * 2 * scale;
   const diePitch = {
-    height: 20,
-    width: 25,
+    height: 25,
+    width: 20,
   };
 
   const [dies, setDies] = useState([]);
@@ -103,6 +104,34 @@ const SystemCoordinates = () => {
               />
             </Box>
             <Box className={clsx(classes.innerWrapper, classes.controlWrapper)}>
+              <Box className={classes.labelWrapper}>
+                <FormControlLabel
+                  label={
+                    <Typography className={classes.circleLabel}>
+                      Wafer center
+                    </Typography>
+                  }
+                  control={
+                    <Box
+                      className={classes.circle}
+                      style={{ backgroundColor: "red" }}
+                    />
+                  }
+                />
+                <FormControlLabel
+                  label={
+                    <Typography className={classes.circleLabel}>
+                      Die origin
+                    </Typography>
+                  }
+                  control={
+                    <Box
+                      className={classes.circle}
+                      style={{ backgroundColor: "blue" }}
+                    />
+                  }
+                />
+              </Box>
               <TextField
                 onChange={onDieOriginXChange}
                 defaultValue={dieOrigin.x}
