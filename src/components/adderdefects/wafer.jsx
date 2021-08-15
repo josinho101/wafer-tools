@@ -161,18 +161,18 @@ const Wafer = (props) => {
         defectGraphics.drawCircle(x, y, defectDiameter);
         defectGraphics.endFill();
 
-        defectGraphics.lineStyle(0.5, 0x000000);
-        const tolerance = 1;
-        const tLeft = { x: x - tolerance, y: y - tolerance }; // top left
-        const tRight = { x: x + tolerance, y: y - tolerance }; // top right
-        const bLeft = { x: x - tolerance, y: y + tolerance }; // bottom left
-        const bRight = { x: x + tolerance, y: y + tolerance }; // bottom right
-        defectGraphics.drawRect(
-          tLeft.x,
-          tLeft.y,
-          tRight.x - tLeft.x,
-          bLeft.y - tLeft.y
-        );
+        // defectGraphics.lineStyle(0.5, 0x000000);
+        // const tolerance = 1;
+        // const tLeft = { x: x - tolerance, y: y - tolerance }; // top left
+        // const tRight = { x: x + tolerance, y: y - tolerance }; // top right
+        // const bLeft = { x: x - tolerance, y: y + tolerance }; // bottom left
+        // const bRight = { x: x + tolerance, y: y + tolerance }; // bottom right
+        // defectGraphics.drawRect(
+        //   tLeft.x,
+        //   tLeft.y,
+        //   tRight.x - tLeft.x,
+        //   bLeft.y - tLeft.y
+        // );
         // defectGraphics.drawCircle(x, y, tolerance);
         defectGraphics.endFill();
       }

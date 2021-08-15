@@ -2,8 +2,8 @@ import { convertNmToMm, radianToDegree } from "../../utils";
 
 export const getDefects = () => {
   const defects1 = [
-    { xIndex: 1, yIndex: 1, xRel: 2125000, yRel: 2725269, color: 0xed068e },
-    { xIndex: 3, yIndex: 5, xRel: 5525600, yRel: 7725169, color: 0xed068e },
+    { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 2725269, color: 0xed068e },
+    { xIndex: 3, yIndex: 5, xRel: 6825600, yRel: 7725169, color: 0xed068e },
     { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0xed068e },
     // { xIndex: 8, yIndex: 3, xRel: 0, yRel: 15000000, color: 0xed068e },
     //{ xIndex: -6, yIndex: -6, xRel: 0, yRel: 0, color: 0xed068e },
@@ -15,7 +15,7 @@ export const getDefects = () => {
   //   { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
   // ];
   const defects2 = [
-    { xIndex: 1, yIndex: 1, xRel: 5125000, yRel: 1725269, color: 0x02a102 },
+    { xIndex: 1, yIndex: 1, xRel: 5125000, yRel: 2725269, color: 0x02a102 },
     { xIndex: 3, yIndex: 5, xRel: 7525600, yRel: 7725169, color: 0x02a102 },
     { xIndex: -4, yIndex: 7, xRel: 6025600, yRel: 4726169, color: 0x02a102 },
     { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
@@ -161,29 +161,61 @@ export const getAdderDefects = (
       const die = dies.filter(
         (die) => die.xIndex === defect.xIndex && die.yIndex === defect.yIndex
       )[0];
-      const filter = getDefectFilter(defect, die, center, diePitch, tolerance);
+
+      const x1Rel = convertNmToMm(defect.xRel);
+      const y1Rel = convertNmToMm(defect.yRel);
+      const x1 = Math.abs(die.dx + x1Rel - center.x);
+      const y1 = die.dy - Math.abs(y1Rel + diePitch.height - center.y);
 
       console.log(
         `Current defect - xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
       );
-      console.log(
-        `Radius - from: ${filter.fromRadius}, to: ${filter.toRadius}`
-      );
-      console.log(`Angle - from: ${filter.fromAngle}, to: ${filter.toAngle}`);
 
       remainingResults.forEach((wafer) => {
-        const defects = wafer.defects.filter((defect) => {
-          return (
-            defect.radius >= filter.fromRadius &&
-            defect.radius <= filter.toRadius &&
-            defect.angle >= filter.fromAngle &&
-            defect.angle <= filter.toAngle
-          );
+        const filtered = wafer.defects.filter((d) => {
+          const die = dies.filter(
+            (die) => die.xIndex === d.xIndex && die.yIndex === d.yIndex
+          )[0];
+          const x2Rel = convertNmToMm(d.xRel);
+          const y2Rel = convertNmToMm(d.yRel);
+          const x2 = Math.abs(die.dx + x2Rel - center.x);
+          const y2 = die.dy - Math.abs(y2Rel + diePitch.height - center.y);
+
+          const dx = Math.pow(x2 - x1, 2);
+          const dy = Math.pow(y2 - y1, 2);
+          const distance = Math.sqrt(dx + dy);
+          console.log(distance);
+          return distance <= tolerance;
         });
-        console.log("Filtered defects", defects);
+        console.log("Filtered defects:", filtered);
       });
 
       console.log("**************************");
+
+      // const die = dies.filter(
+      //   (die) => die.xIndex === defect.xIndex && die.yIndex === defect.yIndex
+      // )[0];
+      // const filter = getDefectFilter(defect, die, center, diePitch, tolerance);
+
+      // console.log(
+      //   `Current defect - xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
+      // );
+      // console.log(
+      //   `Radius - from: ${filter.fromRadius}, to: ${filter.toRadius}`
+      // );
+      // console.log(`Angle - from: ${filter.fromAngle}, to: ${filter.toAngle}`);
+
+      // remainingResults.forEach((wafer) => {
+      //   const defects = wafer.defects.filter((defect) => {
+      //     return (
+      //       defect.radius >= filter.fromRadius &&
+      //       defect.radius <= filter.toRadius &&
+      //       defect.angle >= filter.fromAngle &&
+      //       defect.angle <= filter.toAngle
+      //     );
+      //   });
+      //   console.log("Filtered defects", defects);
+      // });
     });
   }
 

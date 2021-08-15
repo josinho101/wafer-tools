@@ -269,7 +269,7 @@ const AdderDefects = () => {
                   style={{ maxWidth: "100%", display: "flex", marginTop: 32 }}
                 >
                   <WaferHolder
-                    defectDiameter={1}
+                    defectDiameter={2}
                     scale={outputScale}
                     dieOrigin={dieOrigin}
                     dies={viewWaferDies}
