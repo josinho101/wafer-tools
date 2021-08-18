@@ -1,10 +1,10 @@
-import { convertNmToMm, radianToDegree } from "../../utils";
+import { convertNmToMm, convertMicroMeterToMm } from "../../utils";
 
 export const getDefects = () => {
   const defects1 = [
-    { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 2725269, color: 0xed068e },
-    { xIndex: 3, yIndex: 5, xRel: 6825600, yRel: 7725169, color: 0xed068e },
-    { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0xed068e },
+    { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 2725269, color: 0x8546e3 },
+    { xIndex: 3, yIndex: 5, xRel: 6825600, yRel: 7725169, color: 0x8546e3 },
+    { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0x8546e3 },
     // { xIndex: 8, yIndex: 3, xRel: 0, yRel: 15000000, color: 0xed068e },
     //{ xIndex: -6, yIndex: -6, xRel: 0, yRel: 0, color: 0xed068e },
   ];
@@ -15,10 +15,10 @@ export const getDefects = () => {
   //   { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
   // ];
   const defects2 = [
-    { xIndex: 1, yIndex: 1, xRel: 5125000, yRel: 2725269, color: 0x02a102 },
-    { xIndex: 3, yIndex: 5, xRel: 7525600, yRel: 7725169, color: 0x02a102 },
-    { xIndex: -4, yIndex: 7, xRel: 6025600, yRel: 4726169, color: 0x02a102 },
-    { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
+    { xIndex: 1, yIndex: 1, xRel: 7125000, yRel: 2725269, color: 0xff0000 },
+    { xIndex: 3, yIndex: 5, xRel: 8525600, yRel: 7725169, color: 0xff0000 },
+    { xIndex: -4, yIndex: 7, xRel: 8025600, yRel: 4726169, color: 0xff0000 },
+    { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0xff0000 },
   ];
   const defects3 = [
     { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 1725269, color: 0x0652ed },
@@ -28,12 +28,14 @@ export const getDefects = () => {
     { xIndex: 5, yIndex: -4, xRel: 3227500, yRel: 5726169, color: 0x0652ed },
   ];
   const defects4 = [
-    { xIndex: 1, yIndex: 1, xRel: 9125000, yRel: 9725269, color: 0xe86100 },
-    { xIndex: 4, yIndex: 5, xRel: 5525600, yRel: 7725169, color: 0xe86100 },
-    { xIndex: -3, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0xe86100 },
-    { xIndex: -4, yIndex: -4, xRel: 7527600, yRel: 4826169, color: 0xe86100 },
-    { xIndex: 6, yIndex: -4, xRel: 7227500, yRel: 3726169, color: 0xe86100 },
-    { xIndex: 2, yIndex: -6, xRel: 6827500, yRel: 5366169, color: 0xe86100 },
+    { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 2725269, color: 0xff00f7 },
+    { xIndex: 1, yIndex: 1, xRel: 9125000, yRel: 9725269, color: 0xff00f7 },
+    { xIndex: 4, yIndex: 5, xRel: 5525600, yRel: 7725169, color: 0xff00f7 },
+    { xIndex: -3, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0xff00f7 },
+    { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0xff00f7 },
+    { xIndex: -4, yIndex: -4, xRel: 7527600, yRel: 4826169, color: 0xff00f7 },
+    { xIndex: 6, yIndex: -4, xRel: 7227500, yRel: 3726169, color: 0xff00f7 },
+    { xIndex: 2, yIndex: -6, xRel: 6827500, yRel: 5366169, color: 0xff00f7 },
   ];
 
   return {
@@ -98,20 +100,19 @@ const getDefectFilter = (defect, die, center, diePitch, tolerance) => {
   return { fromRadius, toRadius, fromAngle, toAngle };
 };
 
-export const getAdderDefects = (
+export const updateAdderDefects = (
   wafers,
   tolerance,
   dies,
   canvasSize,
   diePitch
 ) => {
-  const adderDefects = [];
+  if (!wafers.length) return [];
+
   const center = {
     x: canvasSize / 2,
     y: canvasSize / 2,
   };
-
-  if (!wafers.length) return;
 
   // remove ref from base objects
   wafers = JSON.parse(JSON.stringify(wafers));
@@ -146,8 +147,9 @@ export const getAdderDefects = (
   if (wafers.length === 1) {
     wafers[0].defects.forEach((defect) => {
       defect.adder = true;
-      adderDefects.push(defect);
     });
+
+    return wafers[0].defects;
   } else {
     // Sort wafers based on "result timestamp of test results".
     wafers.sort((a, b) => a.order - b.order); // for PoC soring with order
@@ -155,7 +157,13 @@ export const getAdderDefects = (
     // get last inspection result based on result timestamp
     const lastResult = wafers[wafers.length - 1];
     const remainingResults = wafers.slice(0, wafers.length - 1);
-    tolerance = convertNmToMm(tolerance);
+    tolerance = convertMicroMeterToMm(tolerance);
+
+    // get all defects from other processes.
+    const remainingDefects = [];
+    remainingResults.forEach((wafer) => {
+      remainingDefects.push(...wafer.defects);
+    });
 
     lastResult.defects.forEach((defect) => {
       const die = dies.filter(
@@ -171,53 +179,37 @@ export const getAdderDefects = (
         `Current defect - xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
       );
 
-      remainingResults.forEach((wafer) => {
-        const filtered = wafer.defects.filter((d) => {
-          const die = dies.filter(
-            (die) => die.xIndex === d.xIndex && die.yIndex === d.yIndex
-          )[0];
-          const x2Rel = convertNmToMm(d.xRel);
-          const y2Rel = convertNmToMm(d.yRel);
-          const x2 = Math.abs(die.dx + x2Rel - center.x);
-          const y2 = die.dy - Math.abs(y2Rel + diePitch.height - center.y);
+      const filtered = remainingDefects.filter((d) => {
+        const die = dies.filter(
+          (die) => die.xIndex === d.xIndex && die.yIndex === d.yIndex
+        )[0];
+        const x2Rel = convertNmToMm(d.xRel);
+        const y2Rel = convertNmToMm(d.yRel);
+        const x2 = Math.abs(die.dx + x2Rel - center.x);
+        const y2 = die.dy - Math.abs(y2Rel + diePitch.height - center.y);
 
-          const dx = Math.pow(x2 - x1, 2);
-          const dy = Math.pow(y2 - y1, 2);
-          const distance = Math.sqrt(dx + dy);
-          console.log(distance);
-          return distance <= tolerance;
-        });
-        console.log("Filtered defects:", filtered);
+        const dx = Math.pow(x2 - x1, 2);
+        const dy = Math.pow(y2 - y1, 2);
+        const distance = Math.sqrt(dx + dy);
+        d.distance = distance;
+        console.log(distance);
+        return distance <= tolerance;
       });
 
-      console.log("**************************");
+      // if we cant find any other defect close to original defect
+      // within tolerance, mark this defect as adder defect.
+      if (!filtered.length) {
+        defect.adder = true;
+      } else {
+        // find a closest defect to the origial defect. that will the cary-over for that defect.
+        filtered.sort((a, b) => a.distance - b.distance); // sort filtered items by distance desc and get first item.
+      }
 
-      // const die = dies.filter(
-      //   (die) => die.xIndex === defect.xIndex && die.yIndex === defect.yIndex
-      // )[0];
-      // const filter = getDefectFilter(defect, die, center, diePitch, tolerance);
-
-      // console.log(
-      //   `Current defect - xIndex:${defect.xIndex}, yIndex:${defect.yIndex}, Radius:${defect.radius}, Angle:${defect.angle},`
-      // );
-      // console.log(
-      //   `Radius - from: ${filter.fromRadius}, to: ${filter.toRadius}`
-      // );
-      // console.log(`Angle - from: ${filter.fromAngle}, to: ${filter.toAngle}`);
-
-      // remainingResults.forEach((wafer) => {
-      //   const defects = wafer.defects.filter((defect) => {
-      //     return (
-      //       defect.radius >= filter.fromRadius &&
-      //       defect.radius <= filter.toRadius &&
-      //       defect.angle >= filter.fromAngle &&
-      //       defect.angle <= filter.toAngle
-      //     );
-      //   });
-      //   console.log("Filtered defects", defects);
-      // });
+      console.log("Filtered defects:", filtered);
     });
-  }
 
-  return adderDefects;
+    console.log("**************************");
+
+    return lastResult.defects;
+  }
 };

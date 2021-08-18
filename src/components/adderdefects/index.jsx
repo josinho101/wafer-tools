@@ -13,7 +13,7 @@ import {
 } from "@material-ui/core";
 import { generateDiesAndDefects2 } from "../../utils/waferhelper";
 import WaferHolder from "./waferholder";
-import { getDefects, getAdderDefects } from "./defecthelper";
+import { getDefects, updateAdderDefects } from "./defecthelper";
 
 const AdderDefects = () => {
   const classes = useStyles();
@@ -29,15 +29,17 @@ const AdderDefects = () => {
     chip: { width: 5, height: 2.5 },
   };
   const dieOrigin = { x: 0, y: 0 };
+  const colors = { adder: 0xff8400, carryOver: 0x1db502 };
 
   const defects = getDefects();
   const [dies, setDies] = useState([]);
   const [viewWaferDies, setViewWaferDies] = useState([]);
+  const [adderDefects, setAdderDefects] = useState([]);
   const [waferStackDefects, setWaferStackDefects] = useState(
     defects.W1P1.defects
   );
   const [selectedWafers, setSelectedWafers] = useState({ W1P1: true });
-  const [tolerance, setTolerance] = useState(1000000);
+  const [tolerance, setTolerance] = useState(2000);
 
   useEffect(() => {
     const [dies] = generateDiesAndDefects2(
@@ -56,6 +58,27 @@ const AdderDefects = () => {
     setViewWaferDies(viewDies);
   }, []);
 
+  useEffect(() => {
+    if (viewWaferDies.length) {
+      const wafers = [];
+      for (let key in selectedWafers) {
+        wafers.push(defects[key]);
+      }
+      const adderDefects = updateAdderDefects(
+        wafers,
+        tolerance,
+        viewWaferDies,
+        outputCanvasSize,
+        diePitch
+      );
+      adderDefects.forEach((defect) => {
+        if (defect.adder) defect.color = colors.adder;
+        else defect.color = colors.carryOver;
+      });
+      setAdderDefects(adderDefects);
+    }
+  }, [tolerance, selectedWafers, viewWaferDies]);
+
   const getWaferIdentifierLabels = (process, waferNumber) => {
     return (
       <Box>
@@ -69,10 +92,38 @@ const AdderDefects = () => {
     );
   };
 
-  const getWaferLabels = (label) => {
+  const getWaferLabels = (label, isAdder) => {
     return (
       <Box>
         <Typography className={classes.waferLabel2}>{label}</Typography>
+        {isAdder ? (
+          <Box className={classes.labelWrapper}>
+            <FormControlLabel
+              label={
+                <Typography className={classes.circleLabel}>Adder</Typography>
+              }
+              control={
+                <Box
+                  className={classes.circle}
+                  style={{ backgroundColor: "#ff8400" }}
+                />
+              }
+            />
+            <FormControlLabel
+              label={
+                <Typography className={classes.circleLabel}>
+                  Carry-over
+                </Typography>
+              }
+              control={
+                <Box
+                  className={classes.circle}
+                  style={{ backgroundColor: "#1db502" }}
+                />
+              }
+            />
+          </Box>
+        ) : null}
       </Box>
     );
   };
@@ -92,13 +143,6 @@ const AdderDefects = () => {
       stackDefects = [...stackDefects, ...defects[key].defects];
     }
 
-    getAdderDefects(
-      wafers,
-      tolerance,
-      viewWaferDies,
-      outputCanvasSize,
-      diePitch
-    );
     setSelectedWafers(newSelectedwafers);
     setWaferStackDefects(stackDefects);
   };
@@ -284,11 +328,11 @@ const AdderDefects = () => {
                     scale={outputScale}
                     dieOrigin={dieOrigin}
                     dies={viewWaferDies}
-                    defects={defects.W1P4.defects}
+                    defects={adderDefects}
                     diePitch={diePitch}
                     canvasSize={outputCanvasSize}
                     waferRadius={waferRadius}
-                    labels={getWaferLabels("Adder & carry-over")}
+                    labels={getWaferLabels("Adder defects", true)}
                   />
                 </Grid>
               </Grid>

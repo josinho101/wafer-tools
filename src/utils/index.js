@@ -48,6 +48,8 @@ export const uuid = () =>
 
 export const convertNmToMm = (nanoMeter) => nanoMeter / 1000000;
 
+export const convertMicroMeterToMm = (nanoMeter) => nanoMeter / 1000;
+
 export const removeDuplicatesFrom2DArray = (array) => {
   const uniques = [];
   const itemsFound = {};

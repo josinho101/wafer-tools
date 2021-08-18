@@ -19,7 +19,6 @@ const WaferHolder = (props) => {
   return (
     <Box className={classes.waferHolder}>
       <Wafer
-        showWaferCenter
         scale={scale}
         dieOrigin={dieOrigin}
         dies={dies}
