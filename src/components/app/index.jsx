@@ -15,9 +15,10 @@ import WaferDetails from "../waferdetails";
 import WaferViews from "../waferviews";
 import SystemCoordinates from "../systemcoordinates";
 import AdderDefects from "../adderdefects";
+import WaferAnatomy from "../waferanatomy";
 
 const App = () => {
-  const [selectedTab, setSelectedTab] = useState(appTabs.systemCoordinates);
+  const [selectedTab, setSelectedTab] = useState(appTabs.waferAnatomy);
 
   const onTabChanged = (e, selected) => {
     setSelectedTab(selected);
@@ -36,6 +37,7 @@ const App = () => {
               scrollButtons="auto"
             >
               <Tab value={appTabs.waferDetails} label="Wafer Details" />
+              <Tab value={appTabs.waferAnatomy} label="Wafer Anatomy" />
               <Tab value={appTabs.waferViews} label="Wafer views" />
               <Tab value={appTabs.waferArea} label="Wafer Area" />
               <Tab
@@ -65,6 +67,9 @@ const App = () => {
             </TabPanel>
             <TabPanel value={selectedTab} index={appTabs.adderDefects}>
               <AdderDefects />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={appTabs.waferAnatomy}>
+              <WaferAnatomy />
             </TabPanel>
           </AppBar>
         </div>

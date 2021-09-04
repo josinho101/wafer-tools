@@ -18,6 +18,7 @@ export const appTabs = {
   uniqueAndCommonDefects: 4,
   systemCoordinates: 5,
   adderDefects: 6,
+  waferAnatomy: 7,
 };
 
 export const colors = {

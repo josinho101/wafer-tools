@@ -5,15 +5,7 @@ export const getDefects = () => {
     { xIndex: 1, yIndex: 1, xRel: 4125000, yRel: 2725269, color: 0x8546e3 },
     { xIndex: 3, yIndex: 5, xRel: 6825600, yRel: 7725169, color: 0x8546e3 },
     { xIndex: -4, yIndex: 7, xRel: 6525600, yRel: 4726169, color: 0x8546e3 },
-    // { xIndex: 8, yIndex: 3, xRel: 0, yRel: 15000000, color: 0xed068e },
-    //{ xIndex: -6, yIndex: -6, xRel: 0, yRel: 0, color: 0xed068e },
   ];
-  // const defects2 = [
-  //   { xIndex: 1, yIndex: 1, xRel: 3125000, yRel: 4725269, color: 0x02a102 },
-  //   { xIndex: 3, yIndex: 5, xRel: 6525600, yRel: 6725169, color: 0x02a102 },
-  //   { xIndex: -4, yIndex: 7, xRel: 3525600, yRel: 2726169, color: 0x02a102 },
-  //   { xIndex: -4, yIndex: -4, xRel: 2527600, yRel: 2826169, color: 0x02a102 },
-  // ];
   const defects2 = [
     { xIndex: 1, yIndex: 1, xRel: 7125000, yRel: 2725269, color: 0xff0000 },
     { xIndex: 3, yIndex: 5, xRel: 8525600, yRel: 7725169, color: 0xff0000 },
@@ -135,6 +127,13 @@ export const updateAdderDefects = (
 
       defect.radius = radius;
       defect.angle = angle;
+
+      const x1 = die.dx + convertNmToMm(defect.xRel) - center.x;
+      const y1 =
+        die.dy - convertNmToMm(defect.yRel) + diePitch.height - center.y;
+
+      defect.x = x1;
+      defect.y = y1;
     });
 
     // sort defects based on radius and angle
@@ -142,6 +141,8 @@ export const updateAdderDefects = (
       a.radius === b.radius ? a.angle - b.angle : a.radius - b.radius
     );
   });
+
+  console.log(wafers);
 
   // if we have only one wafer then all defects will be considered as adder defect.
   if (wafers.length === 1) {
