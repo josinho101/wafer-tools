@@ -6,14 +6,13 @@ import {
   Grid,
   Box,
   Typography,
-  FormControlLabel,
-  Checkbox,
   TextField,
   InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  FormControlLabel,
 } from "@material-ui/core";
 import WaferStage from "./waferstage";
 
@@ -22,35 +21,35 @@ const WaferAnatomy = () => {
 
   const [waferDiameter, setWaferDiameter] = useState(300);
   const [waferOrientation, setWaferOrientation] = useState(0);
-  const [diePitchX, setDiePitchX] = useState(5000000);
-  const [diePitchY, setDiePitchY] = useState(5000000);
-  const [sampleCenterX, setSampleCenterX] = useState(150000000);
-  const [sampleCenterY, setSampleCenterY] = useState(150000000);
-  const [dieOriginX, setDieOriginX] = useState(0);
-  const [dieOriginY, setDieOriginY] = useState(0);
+  const [diePitchX, setDiePitchX] = useState(5);
+  const [diePitchY, setDiePitchY] = useState(5);
+  const [sampleCenterX, setSampleCenterX] = useState(150);
+  const [sampleCenterY, setSampleCenterY] = useState(150);
+  const [dieOriginX, setDieOriginX] = useState(30);
+  const [dieOriginY, setDieOriginY] = useState(30);
 
   const onWaferDiameterChanged = (e) => {
-    setWaferDiameter(e.target.value);
+    setWaferDiameter(+e.target.value);
   };
 
   const onWaferOrientationChanged = (e) => {
-    setWaferOrientation(e.target.value);
+    setWaferOrientation(+e.target.value);
   };
 
   const onDiePitchXChanged = (e) => {
-    setDiePitchX(e.target.value);
+    setDiePitchX(+e.target.value);
   };
 
   const onDiePitchYChanged = (e) => {
-    setDiePitchY(e.target.value);
+    setDiePitchY(+e.target.value);
   };
 
   const onSampleCenterXChanged = (e) => {
-    setSampleCenterX(e.target.value);
+    setSampleCenterX(+e.target.value);
   };
 
   const onSampleCenterYChanged = (e) => {
-    setSampleCenterY(e.target.value);
+    setSampleCenterY(+e.target.value);
   };
 
   const onDieOriginXChanged = (e) => {
@@ -77,18 +76,16 @@ const WaferAnatomy = () => {
             </Grid>
             <Grid item xs={3} className={classes.rightPane}>
               <Box className={classes.controlGroup}>
-                <TextField
-                  type="number"
-                  value={waferDiameter}
-                  onChange={onWaferDiameterChanged}
-                  label="Wafer diameter"
-                  className={classes.controlField}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">mm</InputAdornment>
-                    ),
-                  }}
-                />
+                <FormControl className={classes.controlField}>
+                  <InputLabel>Wafer diameter</InputLabel>
+                  <Select
+                    value={waferDiameter}
+                    onChange={onWaferDiameterChanged}
+                  >
+                    <MenuItem value={200}>200</MenuItem>
+                    <MenuItem value={300}>300</MenuItem>
+                  </Select>
+                </FormControl>
                 <FormControl className={classes.controlField}>
                   <InputLabel>Wafer Orientation</InputLabel>
                   <Select
@@ -111,7 +108,7 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
@@ -123,7 +120,7 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
@@ -137,7 +134,7 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
@@ -149,7 +146,7 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
@@ -163,7 +160,7 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
@@ -175,10 +172,44 @@ const WaferAnatomy = () => {
                   className={classes.controlField}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">nm</InputAdornment>
+                      <InputAdornment position="end">mm</InputAdornment>
                     ),
                   }}
                 />
+              </Box>
+              <Box style={{ textAlign: "left" }}>
+                <FormControlLabel
+                  style={{ marginLeft: 0 }}
+                  label={
+                    <span className={classes.shapeLabel}>
+                      &nbsp;&nbsp;Wafer notch
+                    </span>
+                  }
+                  control={<span className={classes.triangleShape}></span>}
+                />
+                <div>
+                  <span
+                    className={classes.circleShape}
+                    style={{ backgroundColor: "#038c03" }}
+                  ></span>
+                  <span className={classes.shapeLabel}>Die origin</span>
+                </div>
+                <div>
+                  <span
+                    className={classes.circleShape}
+                    style={{ backgroundColor: "#ff00ff" }}
+                  ></span>
+                  <span className={classes.shapeLabel}>Wafer center</span>
+                </div>
+                <div>
+                  <span
+                    className={classes.circleShape}
+                    style={{ backgroundColor: "red" }}
+                  ></span>
+                  <span className={classes.shapeLabel}>
+                    Sample coordinate center
+                  </span>
+                </div>
               </Box>
             </Grid>
           </Grid>
