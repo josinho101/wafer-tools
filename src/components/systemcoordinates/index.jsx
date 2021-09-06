@@ -22,8 +22,6 @@ const SystemCoordinates = () => {
   const classes = useStyles();
   const scale = 0.85;
   const waferRadius = 150;
-  const defectDiameter = 1;
-  const maxDefectsInDie = 50;
   const canvasSize = waferRadius * 2 * scale;
   const diePitch = {
     height: 25,

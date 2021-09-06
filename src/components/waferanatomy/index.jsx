@@ -1,11 +1,10 @@
 import clsx from "clsx";
 import { useStyles } from "./style";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Paper,
   Grid,
   Box,
-  Typography,
   TextField,
   InputAdornment,
   FormControl,
@@ -87,15 +86,15 @@ const WaferAnatomy = () => {
                   </Select>
                 </FormControl>
                 <FormControl className={classes.controlField}>
-                  <InputLabel>Wafer Orientation</InputLabel>
+                  <InputLabel>Wafer notch</InputLabel>
                   <Select
                     value={waferOrientation}
                     onChange={onWaferOrientationChanged}
                   >
-                    <MenuItem value={0}>0°</MenuItem>
-                    <MenuItem value={90}>90°</MenuItem>
-                    <MenuItem value={180}>180°</MenuItem>
-                    <MenuItem value={270}>270°</MenuItem>
+                    <MenuItem value={0}>Up</MenuItem>
+                    <MenuItem value={90}>Right</MenuItem>
+                    <MenuItem value={180}>Down</MenuItem>
+                    <MenuItem value={270}>Left</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -197,7 +196,7 @@ const WaferAnatomy = () => {
                 <div>
                   <span
                     className={classes.circleShape}
-                    style={{ backgroundColor: "#ff00ff" }}
+                    style={{ backgroundColor: "#0000ff" }}
                   ></span>
                   <span className={classes.shapeLabel}>Wafer center</span>
                 </div>
@@ -207,7 +206,7 @@ const WaferAnatomy = () => {
                     style={{ backgroundColor: "red" }}
                   ></span>
                   <span className={classes.shapeLabel}>
-                    Sample coordinate center
+                    Sample coordinate origin
                   </span>
                 </div>
               </Box>

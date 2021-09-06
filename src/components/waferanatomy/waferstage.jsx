@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { useRef, useEffect } from "react";
-import { convertNmToMm, degreeToRadian } from "../../utils";
+import { convertNmToMm, degreeToRadian, inside } from "../../utils";
 
 const WaferStage = (props) => {
   const { diameter, orientation, diePitch, sampleCenter, dieOrigin } = props;
@@ -40,6 +40,17 @@ const WaferStage = (props) => {
       y: sampleCoordinateCenter.y - sampleCenter.y,
     };
 
+    const dieOriginX = waferCenter.x - (sampleCenter.x - dieOrigin.x);
+    const dieOriginY = waferCenter.y + (sampleCenter.y - dieOrigin.y);
+
+    const dies = generateDies(
+      { width: canvasWidth, height: canvasHeight },
+      diameter,
+      diePitch,
+      { x: dieOriginX, y: dieOriginY },
+      waferCenter
+    );
+
     stage.current = new PIXI.Container(0xffffff, true);
     stage.current.scale.set(scale);
     stage.current.position.set(
@@ -48,16 +59,25 @@ const WaferStage = (props) => {
     );
     stage.current.pivot.set(sampleCoordinateCenter.x, sampleCoordinateCenter.y);
 
-    // sample coordinate center
-    const sampleCenterGraphics = new PIXI.Graphics();
-    sampleCenterGraphics.beginFill(0xff0000);
-    sampleCenterGraphics.drawCircle(
-      sampleCoordinateCenter.x,
-      sampleCoordinateCenter.y,
-      3
-    );
-    sampleCenterGraphics.endFill();
-    stage.current.addChild(sampleCenterGraphics);
+    const dieGraphics = new PIXI.Graphics();
+    dieGraphics.lineStyle(0.28, 0x3d3d3d, 0.5);
+
+    dies.forEach((die) => {
+      dieGraphics.beginFill(die.color);
+      dieGraphics.drawRect(die.dx, die.dy, diePitch.x, diePitch.y);
+      if (diePitch.x >= 25 && diePitch.y >= 25) {
+        const text = new PIXI.Text(`(${die.xIndex},${die.yIndex})`, {
+          fontFamily: "Arial",
+          fontSize: 8,
+          fontWeight: "bold",
+        });
+        text.position.x = die.dx + diePitch.x / 2 - text.width / 2;
+        text.position.y = die.dy + diePitch.y / 2 - text.height / 2;
+        dieGraphics.addChild(text);
+      }
+    });
+    dieGraphics.endFill();
+    stage.current.addChild(dieGraphics);
 
     // draw sample coordinate quadrants
     const quadrants = new PIXI.Graphics();
@@ -68,9 +88,20 @@ const WaferStage = (props) => {
     quadrants.lineTo(sampleCoordinateCenter.x * 5, sampleCoordinateCenter.y);
     stage.current.addChild(quadrants);
 
+    // sample coordinate center
+    const sampleCenterGraphics = new PIXI.Graphics();
+    sampleCenterGraphics.beginFill(0xff0000);
+    sampleCenterGraphics.drawCircle(
+      sampleCoordinateCenter.x,
+      sampleCoordinateCenter.y,
+      2
+    );
+    sampleCenterGraphics.endFill();
+    stage.current.addChild(sampleCenterGraphics);
+
     // wafer center
     const waferCenterGraphics = new PIXI.Graphics();
-    waferCenterGraphics.beginFill(0xff00ff);
+    waferCenterGraphics.beginFill(0x0000ff);
     waferCenterGraphics.drawCircle(waferCenter.x, waferCenter.y, 2);
     waferCenterGraphics.endFill();
     stage.current.addChild(waferCenterGraphics);
@@ -86,26 +117,100 @@ const WaferStage = (props) => {
     const notchGraphics = getNotch(orientation, radius, waferCenter);
     stage.current.addChild(notchGraphics);
 
-    const dieOriginX = waferCenter.x - (sampleCenter.x - dieOrigin.x);
-    const dieOriginY = waferCenter.y + (sampleCenter.y - dieOrigin.y);
-
-    // draw die origin
-    const dieOriginGraphics = new PIXI.Graphics();
-    dieOriginGraphics.beginFill(0x038c03);
-    dieOriginGraphics.drawCircle(dieOriginX, dieOriginY, 3);
-    dieOriginGraphics.endFill();
-    stage.current.addChild(dieOriginGraphics);
-
     // draw die origin quadrants
     const dieOriginQuadrants = new PIXI.Graphics();
     dieOriginQuadrants.lineStyle(0.5, 0x000000);
     dieOriginQuadrants.moveTo(dieOriginX, 0);
-    dieOriginQuadrants.lineTo(dieOriginX, dieOriginY * 5);
+    dieOriginQuadrants.lineTo(dieOriginX, dieOriginY * 10);
     dieOriginQuadrants.moveTo(0, dieOriginY);
-    dieOriginQuadrants.lineTo(dieOriginX * 5, dieOriginY);
+    dieOriginQuadrants.lineTo(dieOriginX * 10, dieOriginY);
     stage.current.addChild(dieOriginQuadrants);
 
+    // draw die origin
+    const dieOriginGraphics = new PIXI.Graphics();
+    dieOriginGraphics.beginFill(0x038c03);
+    dieOriginGraphics.drawCircle(dieOriginX, dieOriginY, 2);
+    dieOriginGraphics.endFill();
+    stage.current.addChild(dieOriginGraphics);
+
     renderer.current.render(stage.current);
+  };
+
+  const generateDies = (
+    canvasSize,
+    waferDiameter,
+    diePitch,
+    dieOrigin,
+    center
+  ) => {
+    const dies = [];
+    const dieWidth = diePitch.x;
+    const dieHeight = diePitch.y;
+    // const doEnableDie = diePitch.width === waferDiameter * 2;
+    const waferRadius = waferDiameter / 2;
+    const maxY = Math.floor(waferDiameter / dieHeight);
+    const maxX = Math.floor(waferDiameter / dieWidth);
+    const max = Math.max(maxX, maxY);
+
+    // top left quadrant
+    for (let x = 0; x < max; x++) {
+      const dy = dieOrigin.y - dieHeight * (x + 1);
+      for (let y = 0; y < max; y++) {
+        const dx = dieOrigin.x + dieWidth * y;
+        if (
+          inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius)
+        ) {
+          dies.push({ dx, dy, xIndex: x, yIndex: y, color: 0xfcf0ed });
+        }
+      }
+    }
+
+    // bottom right
+    for (let y = 0; y < max; y++) {
+      const dy = dieOrigin.y + dieHeight * y;
+      for (let x = 0; x < max; x++) {
+        const dx = dieOrigin.x + dieWidth * x;
+        if (
+          inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius)
+        ) {
+          dies.push({ dx, dy, xIndex: x, yIndex: -y - 1, color: 0xedfcf5 });
+        }
+      }
+    }
+
+    // top left
+    for (let y = 0; y < max; y++) {
+      const dy = dieOrigin.y - dieHeight * (y + 1);
+      for (let x = 0; x < max; x++) {
+        const dx = dieOrigin.x - dieWidth * (x + 1);
+        if (
+          inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius)
+        ) {
+          dies.push({ dx, dy, xIndex: -x - 1, yIndex: y, color: 0xfafced });
+        }
+      }
+    }
+
+    // bottom left
+    for (let y = 0; y < max; y++) {
+      const dy = dieOrigin.y + dieHeight * y;
+      for (let x = 0; x < max; x++) {
+        const dx = dieOrigin.x - dieWidth * (x + 1);
+        if (
+          inside(dx, dy, dieWidth, dieHeight, center.x, center.y, waferRadius)
+        ) {
+          dies.push({
+            dx,
+            dy,
+            xIndex: -x - 1,
+            yIndex: -y - 1,
+            color: 0xedeefc,
+          });
+        }
+      }
+    }
+
+    return dies;
   };
 
   const getSampleCoordinateCenter = () => {
