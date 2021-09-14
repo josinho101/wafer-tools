@@ -16,9 +16,10 @@ import WaferViews from "../waferviews";
 import SystemCoordinates from "../systemcoordinates";
 import AdderDefects from "../adderdefects";
 import WaferAnatomy from "../waferanatomy";
+import HazeMapView from "../hazemap";
 
 const App = () => {
-  const [selectedTab, setSelectedTab] = useState(appTabs.waferAnatomy);
+  const [selectedTab, setSelectedTab] = useState(appTabs.hazeMap);
 
   const onTabChanged = (e, selected) => {
     setSelectedTab(selected);
@@ -44,10 +45,11 @@ const App = () => {
                 value={appTabs.coordinateCorrection}
                 label="Coordinate Correction"
               />
-              <Tab
+              <Tab value={appTabs.hazeMap} label="HAZE Map" />
+              {/* <Tab
                 value={appTabs.systemCoordinates}
                 label="System Coordinates"
-              />
+              /> */}
               <Tab value={appTabs.adderDefects} label="Adder defects" />
             </Tabs>
             <TabPanel value={selectedTab} index={appTabs.waferDetails}>
@@ -62,14 +64,17 @@ const App = () => {
             <TabPanel value={selectedTab} index={appTabs.coordinateCorrection}>
               <CoordinateCorrection />
             </TabPanel>
-            <TabPanel value={selectedTab} index={appTabs.systemCoordinates}>
+            {/* <TabPanel value={selectedTab} index={appTabs.systemCoordinates}>
               <SystemCoordinates />
-            </TabPanel>
+            </TabPanel> */}
             <TabPanel value={selectedTab} index={appTabs.adderDefects}>
               <AdderDefects />
             </TabPanel>
             <TabPanel value={selectedTab} index={appTabs.waferAnatomy}>
               <WaferAnatomy />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={appTabs.hazeMap}>
+              <HazeMapView />
             </TabPanel>
           </AppBar>
         </div>

@@ -19,6 +19,7 @@ export const appTabs = {
   systemCoordinates: 5,
   adderDefects: 6,
   waferAnatomy: 7,
+  hazeMap: 8,
 };
 
 export const colors = {
