@@ -49,6 +49,12 @@ const HazeMap = (props) => {
       0x80ebd2, 0xffffff,
     ];
 
+    /*const colors = [
+      0x000000, 0x5f54ff, 0x58caff, 0x64f1ff, 0xa4fefe, 0x4cffcb, 0x20ff7f,
+      0xc1ff42, 0xfaff51, 0xffba6e, 0xff9da6, 0xff0000, 0xff46dd, 0xf79bff,
+      0xffe1ff, 0xffffff,
+    ];*/
+
     const HazeHeader = [
       7, 13, 19, 25, 31, 38, 44, 50, 57, 63, 69, 75, 82, 88, 94, 101, 106, 113,
       119, 126, 132, 138, 144, 151, 157, 163, 170, 176, 182, 188, 194, 201, 207,
@@ -85,15 +91,19 @@ const HazeMap = (props) => {
         const ch = colors[data % 16];
         hazeDataIndex++;
 
-        let point_x = (Pos_R / 1000) * Math.cos(Pos_T + sem_angl - angl_of);
-        let point_y = (Pos_R / 1000) * Math.sin(Pos_T + sem_angl - angl_of);
+        let x = (Pos_R / 1000) * Math.cos(Pos_T + sem_angl - angl_of);
+        let y = (Pos_R / 1000) * Math.sin(Pos_T + sem_angl - angl_of);
 
-        point_x = point_x ? point_x : 0;
-        point_y = point_y ? point_y : 0;
+        x = x ? x : 0;
+        y = y ? y : 0;
 
-        // NEED RECT - DO RECHECK THIS
+        // add radius to x and y points
+        x += 150;
+        y += 150;
+
         pointGraphics.beginFill(ch);
-        pointGraphics.drawCircle(point_x + 150, point_y + 150, 1);
+        pointGraphics.drawRect(x, y, 1, 1);
+        // pointGraphics.drawCircle(x, y, 1);
         pointGraphics.endFill();
       }
     }
