@@ -17,4 +17,14 @@ export const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
   },
+  checkboxLabel: {
+    fontSize: 12,
+  },
+  wrapper: {
+    display: "flex",
+    flexDirection: "column-reverse",
+  },
+  marginBottom16: {
+    marginBottom: theme.spacing(2),
+  },
 }));

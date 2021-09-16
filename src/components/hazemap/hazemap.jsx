@@ -4,14 +4,14 @@ import { convertNmToMm } from "../../utils";
 import { hazeData } from "./hazedata";
 
 const HazeMap = (props) => {
-  const { scale = 1, canvasSize = 300, radius = 150 } = props;
+  const { greyScale, scale = 1, canvasSize = 300, radius = 150 } = props;
 
   const stage = useRef();
   const rootRef = useRef();
   const renderer = useRef();
 
   useEffect(() => {
-    PIXI.settings.RESOLUTION = 1.5;
+    PIXI.settings.RESOLUTION = 1;
     renderer.current = PIXI.autoDetectRenderer(canvasSize, canvasSize, {
       transparent: true,
       antialias: true,
@@ -27,7 +27,7 @@ const HazeMap = (props) => {
 
   useEffect(() => {
     draw();
-  }, []);
+  }, [greyScale]);
 
   const draw = () => {
     const center = canvasSize / 2;
@@ -75,10 +75,23 @@ const HazeMap = (props) => {
     const angl_of = 0;
     const sem_angl = 0;
     const HCH_MAX = 16;
-
-    const pointGraphics = new PIXI.Graphics();
+    const NR_MODE = 0;
+    const NR_BIT_SHIFT = 0;
+    const EnMode = 0; // get from binary file
 
     let hazeDataIndex = 0;
+    let iBitShift = 0;
+
+    if (NR_MODE == EnMode) {
+      iBitShift = NR_BIT_SHIFT;
+    }
+
+    const pointGraphics = new PIXI.Graphics();
+    if (greyScale) {
+      const colorMatrix = new PIXI.filters.ColorMatrixFilter();
+      pointGraphics.filters = [colorMatrix];
+      colorMatrix.greyscale(0.37);
+    }
 
     for (let li = 0; li < LastR; li++) {
       const Pos_R = (li + HazeROffset) * HG_Size;
